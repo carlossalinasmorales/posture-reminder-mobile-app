@@ -158,9 +158,6 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
                             final reminder = state.filteredReminders[index];
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 16),
-                              // Nota: La simplificación visual de la tarjeta debe hacerse
-                              // DENTRO del widget 'ReminderCard'. Aquí solo se aplica
-                              // más espacio entre ellas para mayor claridad.
                               child: ReminderCard(
                                 reminder: reminder,
                                 onComplete: () => context
@@ -292,9 +289,6 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
     );
   }
 
-  // El resto de los métodos auxiliares (EmptyState, navegación, diálogo) se mantienen sin cambios
-  // ya que fueron mejorados en el paso anterior y no necesitan más simplificación.
-
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
@@ -333,19 +327,6 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
       ),
     );
   }
-
-  // String _getFilterName(ReminderStatus status) {
-  //   switch (status) {
-  //     case ReminderStatus.pending:
-  //       return 'pendientes';
-  //     case ReminderStatus.completed:
-  //       return 'completados';
-  //     case ReminderStatus.skipped:
-  //       return 'omitidos';
-  //     case ReminderStatus.postponed:
-  //       return 'aplazados';
-  //   }
-  // }
 
   void _navigateToCreate() {
     Navigator.push(

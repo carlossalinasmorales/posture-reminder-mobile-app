@@ -354,7 +354,6 @@ class ReminderBloc extends Bloc<ReminderEvent, ReminderState> {
     result.fold(
       (error) => emit(ReminderError(error)),
       (_) {
-        emit(const ReminderOperationSuccess('Sincronización completada'));
         add(LoadReminders());
       },
     );

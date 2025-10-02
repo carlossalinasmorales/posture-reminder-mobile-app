@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../domain/entities/reminder.dart';
@@ -304,7 +303,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: isSelected
-                ? const Color(0xFF3498DB).withOpacity(0.1)
+                ? const Color(0xFF3498DB).withValues(alpha: 0.1)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
@@ -472,8 +471,15 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
     }
   }
 
+  // Reemplaza la función _selectTime() en create_reminder_screen.dart
+
   Future<void> _selectTime() async {
-    // Usar selector estilo iOS (CupertinoDatePicker)
+    int selectedHour = _selectedDateTime.hour > 12
+        ? _selectedDateTime.hour - 12
+        : (_selectedDateTime.hour == 0 ? 12 : _selectedDateTime.hour);
+    int selectedMinute = (_selectedDateTime.minute / 5).round();
+    bool isAM = _selectedDateTime.hour < 12;
+
     await showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -481,70 +487,245 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (BuildContext builder) {
-        DateTime tempDateTime = _selectedDateTime;
-        return Container(
-          height: 300,
-          padding: const EdgeInsets.only(top: 20),
-          child: Column(
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        'Cancelar',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              height: 400,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  const Text(
+                    'Selecciona la hora',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C3E50),
                     ),
-                    const Text(
-                      'Selecciona la hora',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C3E50),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        setState(() => _selectedDateTime = tempDateTime);
-                        Navigator.pop(context);
-                      },
-                      child: const Text(
-                        'Listo',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF3498DB),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Selector de Hora con ruedas
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Horas (1-12)
+                      SizedBox(
+                        width: 80,
+                        height: 180,
+                        child: ListWheelScrollView.useDelegate(
+                          controller: FixedExtentScrollController(
+                            initialItem: selectedHour - 1,
+                          ),
+                          itemExtent: 50,
+                          perspective: 0.005,
+                          diameterRatio: 1.2,
+                          physics: const FixedExtentScrollPhysics(),
+                          onSelectedItemChanged: (index) {
+                            setModalState(() => selectedHour = index + 1);
+                          },
+                          childDelegate: ListWheelChildBuilderDelegate(
+                            childCount: 12,
+                            builder: (context, index) {
+                              final hour = index + 1;
+                              final isSelected = selectedHour == hour;
+                              return Center(
+                                child: Text(
+                                  hour.toString().padLeft(2, '0'),
+                                  style: TextStyle(
+                                    fontSize: isSelected ? 36 : 24,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    color: isSelected
+                                        ? const Color(0xFF3498DB)
+                                        : Colors.grey,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          ':',
+                          style: TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2C3E50),
+                          ),
+                        ),
+                      ),
+
+                      // Minutos (00, 05, 10, 15, ..., 55)
+                      SizedBox(
+                        width: 80,
+                        height: 180,
+                        child: ListWheelScrollView.useDelegate(
+                          controller: FixedExtentScrollController(
+                            initialItem: selectedMinute,
+                          ),
+                          itemExtent: 50,
+                          perspective: 0.005,
+                          diameterRatio: 1.2,
+                          physics: const FixedExtentScrollPhysics(),
+                          onSelectedItemChanged: (index) {
+                            setModalState(() => selectedMinute = index);
+                          },
+                          childDelegate: ListWheelChildBuilderDelegate(
+                            childCount: 12, // 0, 5, 10, ..., 55
+                            builder: (context, index) {
+                              final minute = index * 5;
+                              final isSelected = selectedMinute == index;
+                              return Center(
+                                child: Text(
+                                  minute.toString().padLeft(2, '0'),
+                                  style: TextStyle(
+                                    fontSize: isSelected ? 36 : 24,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    color: isSelected
+                                        ? const Color(0xFF3498DB)
+                                        : Colors.grey,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 16),
+
+                      // AM/PM Selector
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          InkWell(
+                            onTap: () => setModalState(() => isAM = true),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isAM
+                                    ? const Color(0xFF3498DB)
+                                    : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                'AM',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: isAM ? Colors.white : Colors.grey[600],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          InkWell(
+                            onTap: () => setModalState(() => isAM = false),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: !isAM
+                                    ? const Color(0xFF3498DB)
+                                    : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                'PM',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                      !isAM ? Colors.white : Colors.grey[600],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // Botones
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            side: const BorderSide(color: Color(0xFF3498DB)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Convertir a formato 24 horas
+                            int hour24 = selectedHour;
+                            if (!isAM && selectedHour != 12) {
+                              hour24 = selectedHour + 12;
+                            } else if (isAM && selectedHour == 12) {
+                              hour24 = 0;
+                            }
+
+                            setState(() {
+                              _selectedDateTime = DateTime(
+                                _selectedDateTime.year,
+                                _selectedDateTime.month,
+                                _selectedDateTime.day,
+                                hour24,
+                                selectedMinute * 5,
+                              );
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF3498DB),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Listo',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const Divider(),
-              // Selector de hora estilo iOS
-              Expanded(
-                child: CupertinoDatePicker(
-                  mode: CupertinoDatePickerMode.time,
-                  use24hFormat: true,
-                  initialDateTime: _selectedDateTime,
-                  onDateTimeChanged: (DateTime newDateTime) {
-                    tempDateTime = DateTime(
-                      _selectedDateTime.year,
-                      _selectedDateTime.month,
-                      _selectedDateTime.day,
-                      newDateTime.hour,
-                      newDateTime.minute,
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );

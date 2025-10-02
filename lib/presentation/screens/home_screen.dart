@@ -186,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               'Estaremos aquí para recordarte tu postura. Es por tu bienestar.',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.95),
+                color: Colors.white.withValues(alpha: 0.95),
                 fontSize: 18, // Texto más grande
                 height: 1.2, // Mayor espaciado entre líneas
               ),
@@ -222,8 +222,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(
                     18), // Mayor padding para el círculo del icono
                 decoration: BoxDecoration(
-                  color: color.withOpacity(
-                      0.1), // Opacidad reducida para menos distracción
+                  color: color.withValues(
+                      alpha: 0.1), // Opacidad reducida para menos distracción
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Icon(

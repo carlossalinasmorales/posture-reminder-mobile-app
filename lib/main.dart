@@ -60,8 +60,6 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Recordatorios de Postura',
         debugShowCheckedModeBanner: false,
-
-        // AGREGAR ESTAS LÍNEAS:
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
@@ -71,7 +69,6 @@ class MyApp extends StatelessWidget {
           Locale('es', 'ES'),
         ],
         locale: const Locale('es', 'ES'),
-
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(
