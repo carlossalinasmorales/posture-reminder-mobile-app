@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   
   # UI
   cupertino_icons: ^1.0.6
@@ -40,6 +42,7 @@ dependencies:
   dartz: ^0.10.1
   get_it: ^8.2.0
   injectable: ^2.3.2
+  flutter_localization: ^0.3.3
 
 dev_dependencies:
   flutter_test:

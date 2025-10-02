@@ -24,34 +24,34 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
 
   bool get _isEditing => widget.reminder != null;
 
-  // Sugerencias predefinidas para personas mayores
-  final List<Map<String, String>> _suggestions = [
-    {
-      'title': 'Endereza tu espalda',
-      'description':
-          'Recuerda estar sentado con la espalda recta y los pies apoyados en el suelo.',
-    },
-    {
-      'title': 'Revisa tu postura',
-      'description':
-          'Asegúrate de que tus hombros estén relajados y tu cabeza alineada con la columna.',
-    },
-    {
-      'title': 'Pausa para estirar',
-      'description':
-          'Levántate y estira los brazos hacia arriba. Gira suavemente el cuello a ambos lados.',
-    },
-    {
-      'title': 'Camina un poco',
-      'description':
-          'Da una vuelta corta por tu casa. El movimiento ayuda a tu circulación y postura.',
-    },
-    {
-      'title': 'Relaja los hombros',
-      'description':
-          'Baja los hombros, respira profundo y libera la tensión acumulada.',
-    },
-  ];
+  // // Sugerencias predefinidas para personas mayores
+  // final List<Map<String, String>> _suggestions = [
+  //   {
+  //     'title': 'Endereza tu espalda',
+  //     'description':
+  //         'Recuerda estar sentado con la espalda recta y los pies apoyados en el suelo.',
+  //   },
+  //   {
+  //     'title': 'Revisa tu postura',
+  //     'description':
+  //         'Asegúrate de que tus hombros estén relajados y tu cabeza alineada con la columna.',
+  //   },
+  //   {
+  //     'title': 'Pausa para estirar',
+  //     'description':
+  //         'Levántate y estira los brazos hacia arriba. Gira suavemente el cuello a ambos lados.',
+  //   },
+  //   {
+  //     'title': 'Camina un poco',
+  //     'description':
+  //         'Da una vuelta corta por tu casa. El movimiento ayuda a tu circulación y postura.',
+  //   },
+  //   {
+  //     'title': 'Relaja los hombros',
+  //     'description':
+  //         'Baja los hombros, respira profundo y libera la tensión acumulada.',
+  //   },
+  // ];
 
   @override
   void initState() {
@@ -104,8 +104,8 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            // Sugerencias rápidas
-            if (!_isEditing) _buildSuggestionsSection(),
+            // // Sugerencias rápidas
+            // if (!_isEditing) _buildSuggestionsSection(),
 
             const SizedBox(height: 20),
 
@@ -184,55 +184,55 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
     );
   }
 
-  Widget _buildSuggestionsSection() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.lightbulb, color: Color(0xFFF39C12), size: 24),
-                SizedBox(width: 8),
-                Text(
-                  'Sugerencias rápidas',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _suggestions.map((suggestion) {
-                return ActionChip(
-                  label: Text(
-                    suggestion['title']!,
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _titleController.text = suggestion['title']!;
-                      _descriptionController.text = suggestion['description']!;
-                    });
-                  },
-                  backgroundColor: const Color(0xFF3498DB).withOpacity(0.1),
-                  labelStyle: const TextStyle(color: Color(0xFF3498DB)),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Widget _buildSuggestionsSection() {
+  //   return Card(
+  //     elevation: 2,
+  //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  //     child: Padding(
+  //       padding: const EdgeInsets.all(16),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           const Row(
+  //             children: [
+  //               Icon(Icons.lightbulb, color: Color(0xFFF39C12), size: 24),
+  //               SizedBox(width: 8),
+  //               Text(
+  //                 'Sugerencias rápidas',
+  //                 style: TextStyle(
+  //                   fontSize: 18,
+  //                   fontWeight: FontWeight.bold,
+  //                   color: Color(0xFF2C3E50),
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //           const SizedBox(height: 12),
+  //           Wrap(
+  //             spacing: 8,
+  //             runSpacing: 8,
+  //             children: _suggestions.map((suggestion) {
+  //               return ActionChip(
+  //                 label: Text(
+  //                   suggestion['title']!,
+  //                   style: const TextStyle(fontSize: 14),
+  //                 ),
+  //                 onPressed: () {
+  //                   setState(() {
+  //                     _titleController.text = suggestion['title']!;
+  //                     _descriptionController.text = suggestion['description']!;
+  //                   });
+  //                 },
+  //                 backgroundColor: const Color(0xFF3498DB).withOpacity(0.1),
+  //                 labelStyle: const TextStyle(color: Color(0xFF3498DB)),
+  //               );
+  //             }).toList(),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildTextField({
     required TextEditingController controller,
