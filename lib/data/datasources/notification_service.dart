@@ -1,13 +1,68 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/data/latest.dart' as tzdata;
 import '../../domain/entities/reminder.dart';
 
-// Callback global para manejar acciones en segundo plano
+const String completeActionId = 'complete';
+const String postponeActionId = 'postpone';
+const String notificationChannelId = 'posture_reminders';
+
+// MethodChannel para comunicación con código nativo
+const MethodChannel _platform = MethodChannel('notification_actions');
+
+// Instancia global para permitir uso en callbacks de background
+final FlutterLocalNotificationsPlugin notificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
 @pragma('vm:entry-point')
-void notificationTapBackground(NotificationResponse response) {
-  // Este método se ejecuta cuando se toca la notificación en segundo plano
-  print('Notificación tocada en segundo plano: ${response.actionId}');
+Future<void> notificationTapBackground(
+    NotificationResponse notificationResponse) async {
+  try {
+    // Asegurar zonas horarias disponibles en el isolate de background
+    tzdata.initializeTimeZones();
+  } catch (_) {
+    // ignorar si ya está inicializado
+  }
+
+  final String? reminderId = notificationResponse.payload;
+  final String? actionId = notificationResponse.actionId;
+
+  if (reminderId == null || actionId == null) return;
+
+  // Construir detalles mínimos para Android/iOS cuando sea necesario reprogramar
+  const androidDetails = AndroidNotificationDetails(
+    notificationChannelId,
+    'Recordatorios de Postura',
+    channelDescription:
+        'Notificaciones para recordar mantener una buena postura',
+    importance: Importance.high,
+    priority: Priority.high,
+    playSound: true,
+  );
+  const iosDetails = DarwinNotificationDetails(
+    presentAlert: true,
+    presentBadge: true,
+    presentSound: true,
+  );
+  const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+
+  if (actionId == completeActionId) {
+    // Cancelar cualquier notificación asociada a este recordatorio
+    await notificationsPlugin.cancel(reminderId.hashCode);
+  } else if (actionId == postponeActionId) {
+    // Reprogramar a +2 minutos con contenido genérico (no tenemos título/descripción aquí)
+    final scheduled = tz.TZDateTime.now(tz.local).add(const Duration(minutes: 2));
+    await notificationsPlugin.zonedSchedule(
+      reminderId.hashCode,
+      'Recordatorio de Postura',
+      'Aplazado 2 minutos',
+      scheduled,
+      details,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      payload: reminderId,
+    );
+  }
 }
 
 class NotificationService {
@@ -15,14 +70,12 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notifications =
-      FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notifications = notificationsPlugin;
 
-  // Callback para manejar acciones
   Function(String reminderId, String action)? onActionReceived;
 
   Future<void> initialize() async {
-    tz.initializeTimeZones();
+    tzdata.initializeTimeZones();
 
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -39,9 +92,91 @@ class NotificationService {
 
     await _notifications.initialize(
       initSettings,
-      onDidReceiveNotificationResponse: _onNotificationTapped,
+      onDidReceiveNotificationResponse: _onNotificationResponse,
       onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
+
+    // Configurar el handler para acciones desde el código nativo
+    _platform.setMethodCallHandler(_handleNativeAction);
+
+    await _handleAppLaunchNotification();
+
+    // Verificar acciones pendientes
+    await _checkPendingActions();
+  }
+
+  // Handler para acciones desde el código nativo de Android
+  Future<void> _handleNativeAction(MethodCall call) async {
+    if (call.method == 'onNotificationAction') {
+      final String reminderId = call.arguments['reminderId'];
+      final String action = call.arguments['action'];
+
+      print('🔔 Acción nativa recibida: $action para $reminderId');
+      onActionReceived?.call(reminderId, action);
+    }
+  }
+
+  // Verificar si hay acciones pendientes al iniciar
+  Future<void> _checkPendingActions() async {
+    try {
+      await _platform.invokeMethod('checkPendingActions');
+    } catch (e) {
+      print('Error verificando acciones pendientes: $e');
+    }
+  }
+
+  Future<void> _handleAppLaunchNotification() async {
+    final notificationAppLaunchDetails =
+        await _notifications.getNotificationAppLaunchDetails();
+
+    if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
+      _onNotificationResponse(
+          notificationAppLaunchDetails!.notificationResponse!);
+    }
+  }
+
+  void _onNotificationResponse(NotificationResponse response) async {
+    final payload = response.payload;
+    final actionId = response.actionId;
+
+    print('Notificación respondida - Payload: $payload, ActionId: $actionId');
+
+    if (payload == null || actionId == null) return;
+
+    // Ejecutar lógica directa para asegurar efecto inmediato
+    if (actionId == completeActionId) {
+      await _notifications.cancel(payload.hashCode);
+    } else if (actionId == postponeActionId) {
+      // Programar a +2 minutos con contenido genérico
+      const androidDetails = AndroidNotificationDetails(
+        notificationChannelId,
+        'Recordatorios de Postura',
+        channelDescription:
+            'Notificaciones para recordar mantener una buena postura',
+        importance: Importance.high,
+        priority: Priority.high,
+        playSound: true,
+      );
+      const iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+      const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+
+      await _notifications.zonedSchedule(
+        payload.hashCode,
+        'Recordatorio de Postura',
+        'Aplazado 2 minutos',
+        tz.TZDateTime.now(tz.local).add(const Duration(minutes: 2)),
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: payload,
+      );
+    }
+
+    // Notificar a capas superiores si están escuchando
+    onActionReceived?.call(payload, actionId);
   }
 
   Future<void> requestPermissions() async {
@@ -58,18 +193,6 @@ class NotificationService {
     );
   }
 
-  void _onNotificationTapped(NotificationResponse response) {
-    final payload = response.payload;
-    final action = response.actionId;
-
-    print('Notificación tocada - Payload: $payload, Action: $action');
-
-    if (payload != null && action != null) {
-      // Llamar al callback registrado
-      onActionReceived?.call(payload, action);
-    }
-  }
-
   Future<void> scheduleReminder(Reminder reminder) async {
     final now = DateTime.now();
     var scheduledDate = reminder.dateTime;
@@ -84,29 +207,32 @@ class NotificationService {
     }
 
     final androidDetails = AndroidNotificationDetails(
-      'posture_reminders',
+      notificationChannelId,
       'Recordatorios de Postura',
       channelDescription:
           'Notificaciones para recordar mantener una buena postura',
       importance: Importance.high,
       priority: Priority.high,
-      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+      showWhen: true,
+      enableVibration: true,
+      playSound: true,
       styleInformation: BigTextStyleInformation(
         reminder.description,
         contentTitle: reminder.title,
+        summaryText: 'Recordatorio de postura',
       ),
       actions: <AndroidNotificationAction>[
         const AndroidNotificationAction(
-          'complete',
-          '✓ Completar',
-          showsUserInterface: false,
+          completeActionId,
+          'Completar',
+          showsUserInterface: true,
           cancelNotification: true,
         ),
         const AndroidNotificationAction(
-          'postpone',
-          '⏰ Aplazar 2 min',
-          showsUserInterface: false,
-          cancelNotification: true,
+          postponeActionId,
+          'Aplazar 2 min',
+          showsUserInterface: true,
+          cancelNotification: false,
         ),
       ],
     );
@@ -115,7 +241,6 @@ class NotificationService {
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
-      categoryIdentifier: 'postureReminder',
     );
 
     final notificationDetails = NotificationDetails(
@@ -123,48 +248,53 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    switch (reminder.frequency) {
-      case ReminderFrequency.once:
-        await _notifications.zonedSchedule(
-          reminder.id.hashCode,
-          reminder.title,
-          reminder.description,
-          tz.TZDateTime.from(scheduledDate, tz.local),
-          notificationDetails,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          payload: reminder.id,
-        );
-        break;
+    try {
+      switch (reminder.frequency) {
+        case ReminderFrequency.once:
+          await _notifications.zonedSchedule(
+            reminder.id.hashCode,
+            reminder.title,
+            reminder.description,
+            tz.TZDateTime.from(scheduledDate, tz.local),
+            notificationDetails,
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            payload: reminder.id,
+          );
+          break;
 
-      case ReminderFrequency.daily:
-        await _notifications.zonedSchedule(
-          reminder.id.hashCode,
-          reminder.title,
-          reminder.description,
-          tz.TZDateTime.from(scheduledDate, tz.local),
-          notificationDetails,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          matchDateTimeComponents: DateTimeComponents.time,
-          payload: reminder.id,
-        );
-        break;
+        case ReminderFrequency.daily:
+          await _notifications.zonedSchedule(
+            reminder.id.hashCode,
+            reminder.title,
+            reminder.description,
+            tz.TZDateTime.from(scheduledDate, tz.local),
+            notificationDetails,
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            matchDateTimeComponents: DateTimeComponents.time,
+            payload: reminder.id,
+          );
+          break;
 
-      case ReminderFrequency.weekly:
-        await _notifications.zonedSchedule(
-          reminder.id.hashCode,
-          reminder.title,
-          reminder.description,
-          tz.TZDateTime.from(scheduledDate, tz.local),
-          notificationDetails,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-          payload: reminder.id,
-        );
-        break;
+        case ReminderFrequency.weekly:
+          await _notifications.zonedSchedule(
+            reminder.id.hashCode,
+            reminder.title,
+            reminder.description,
+            tz.TZDateTime.from(scheduledDate, tz.local),
+            notificationDetails,
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+            payload: reminder.id,
+          );
+          break;
 
-      case ReminderFrequency.custom:
-        await _scheduleCustomReminder(reminder, notificationDetails);
-        break;
+        case ReminderFrequency.custom:
+          await _scheduleCustomReminder(reminder, notificationDetails);
+          break;
+      }
+      print('Notificación programada para: $scheduledDate');
+    } catch (e) {
+      print('Error al programar notificación: $e');
     }
   }
 
@@ -263,7 +393,7 @@ class NotificationService {
 
   Future<void> showImmediateNotification(Reminder reminder) async {
     const androidDetails = AndroidNotificationDetails(
-      'posture_reminders',
+      notificationChannelId,
       'Recordatorios de Postura',
       channelDescription:
           'Notificaciones para recordar mantener una buena postura',

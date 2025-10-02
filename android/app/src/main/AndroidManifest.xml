@@ -52,6 +52,8 @@
             </intent-filter>
         </receiver>
 
+        
+
         <!-- Receptor para las notificaciones programadas -->
         <receiver 
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"

@@ -184,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 2),
             Text(
-              'Estaremos aquí para recordarte tu postura. Es por tu bienestar.',
+              'Estaremos aquí para cuidar de tu postura. Es por tu bienestar.',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.95),
                 fontSize: 18, // Texto más grande
