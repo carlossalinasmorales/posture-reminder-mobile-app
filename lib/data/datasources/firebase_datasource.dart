@@ -6,29 +6,27 @@ class FirebaseDataSource {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  String? get userId => _auth.currentUser?.uid;
+  User? get currentUser => _auth.currentUser;
+  String? get userId => currentUser?.uid;
+  bool get isAuthenticated => currentUser != null;
 
   CollectionReference get _remindersCollection {
     if (userId == null) throw Exception('Usuario no autenticado');
     return _firestore.collection('users').doc(userId).collection('reminders');
   }
 
-  // Autenticación anónima
-  Future<void> signInAnonymously() async {
-    if (_auth.currentUser == null) {
-      await _auth.signInAnonymously();
-    }
+  // Stream del estado de autenticación
+  Stream<User?> authStateChanges() {
+    return _auth.authStateChanges();
   }
 
-  // Crear o actualizar recordatorio
   Future<void> saveReminder(ReminderModel reminder) async {
     await _remindersCollection.doc(reminder.id).set(
-          reminder.toFirestore(),
-          SetOptions(merge: true),
-        );
+      reminder.toFirestore(),
+      SetOptions(merge: true),
+    );
   }
 
-  // Obtener todos los recordatorios
   Future<List<ReminderModel>> getAllReminders() async {
     final snapshot = await _remindersCollection.get();
     return snapshot.docs
@@ -36,28 +34,24 @@ class FirebaseDataSource {
         .toList();
   }
 
-  // Obtener recordatorio por ID
   Future<ReminderModel?> getReminderById(String id) async {
     final doc = await _remindersCollection.doc(id).get();
     if (!doc.exists) return null;
     return ReminderModel.fromFirestore(doc);
   }
 
-  // Eliminar recordatorio
   Future<void> deleteReminder(String id) async {
     await _remindersCollection.doc(id).delete();
   }
 
-  // Stream para sincronización en tiempo real
   Stream<List<ReminderModel>> remindersStream() {
     return _remindersCollection.snapshots().map(
-          (snapshot) => snapshot.docs
-              .map((doc) => ReminderModel.fromFirestore(doc))
-              .toList(),
-        );
+      (snapshot) => snapshot.docs
+          .map((doc) => ReminderModel.fromFirestore(doc))
+          .toList(),
+    );
   }
 
-  // Actualizar estado del recordatorio
   Future<void> updateReminderStatus(String id, String status) async {
     await _remindersCollection.doc(id).update({
       'status': status,
@@ -65,7 +59,6 @@ class FirebaseDataSource {
     });
   }
 
-  // Sincronización batch
   Future<void> syncReminders(List<ReminderModel> reminders) async {
     final batch = _firestore.batch();
 
@@ -77,7 +70,6 @@ class FirebaseDataSource {
     await batch.commit();
   }
 
-  // Obtener última fecha de sincronización
   Future<DateTime?> getLastSyncTime() async {
     final doc = await _firestore
         .collection('users')
@@ -92,7 +84,6 @@ class FirebaseDataSource {
     return timestamp?.toDate();
   }
 
-  // Actualizar última fecha de sincronización
   Future<void> updateLastSyncTime() async {
     await _firestore
         .collection('users')
@@ -102,5 +93,9 @@ class FirebaseDataSource {
         .set({
       'lastSync': FieldValue.serverTimestamp(),
     });
+  }
+
+  Future<void> signOut() async {
+    await _auth.signOut();
   }
 }

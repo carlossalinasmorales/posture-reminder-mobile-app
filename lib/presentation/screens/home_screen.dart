@@ -3,6 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/reminder_bloc.dart';
 import 'my_reminders_screen.dart';
 import 'create_reminder_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../screens/login_screen.dart';
+import '../../data/datasources/local_datasource.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,6 +16,20 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  Future<String> _getUserStatus() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    return '👤 ${user.displayName ?? user.email ?? "Usuario"}';
+  }
+  
+  final prefs = await SharedPreferences.getInstance();
+  final isGuest = prefs.getBool('guest_mode') ?? false;
+  if (isGuest) {
+    return '🎭 Modo Invitado';
+  }
+  
+  return 'Desconectado';
+}
   @override
   void initState() {
     super.initState();
@@ -26,17 +44,164 @@ class _HomeScreenState extends State<HomeScreen> {
       // Usar un fondo blanco sólido para máximo contraste
       backgroundColor: Colors.white,
       appBar: AppBar(
-        elevation: 1, // Leve elevación para separar de la vista
-        backgroundColor: Colors.white,
-        title: const Text(
-          'Recordatorios de Postura',
-          style: TextStyle(
-            color: Color(0xFF2C3E50), // Color oscuro para alto contraste
-            fontSize: 26, // Título de AppBar más grande
-            fontWeight: FontWeight.w900, // Extra-negrita
+  elevation: 1,
+  backgroundColor: Colors.white,
+  title: const Text(
+    'Recordatorios de Postura',
+    style: TextStyle(
+      color: Color(0xFF2C3E50),
+      fontSize: 26,
+      fontWeight: FontWeight.w900,
+    ),
+  ),
+  // AGREGAR ESTA SECCIÓN
+  actions: [
+    // Botón de sincronizar
+    IconButton(
+      icon: const Icon(Icons.cloud_sync, color: Color(0xFF007AFF), size: 28),
+      onPressed: () {
+        context.read<ReminderBloc>().add(SyncWithFirebase());
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Sincronizando con la nube...',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            duration: Duration(seconds: 2),
           ),
-        ),
+        );
+      },
+    ),
+    // Botón de cerrar sesión
+    PopupMenuButton<String>(
+  icon: const Icon(Icons.more_vert, color: Color(0xFF2C3E50), size: 28),
+  itemBuilder: (context) => [
+    // AGREGAR ESTA LÍNEA PARA MOSTRAR ESTADO
+    PopupMenuItem(
+      enabled: false,
+      child: FutureBuilder<String>(
+        future: _getUserStatus(),
+        builder: (context, snapshot) {
+          return Text(
+            snapshot.data ?? 'Cargando...',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold,
+            ),
+          );
+        },
       ),
+    ),
+    const PopupMenuDivider(),
+    const PopupMenuItem(
+      value: 'logout',
+      child: Row(
+        children: [
+          Icon(Icons.logout, color: Colors.red),
+          SizedBox(width: 12),
+          Text('Cerrar Sesión', style: TextStyle(fontSize: 18)),
+        ],
+      ),
+    ),
+  ],
+  onSelected: (value) async {
+    if (value == 'logout') {
+      // Verificar si es invitado
+      final prefs = await SharedPreferences.getInstance();
+      final isGuest = prefs.getBool('guest_mode') ?? false;
+      
+      if (isGuest) {
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text(
+              '¿Salir como Invitado?',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            content: const Text(
+              '⚠️ Si sales como invitado, perderás TODOS tus datos. ¿Deseas crear una cuenta para guardar tus recordatorios?',
+              style: TextStyle(fontSize: 18),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar', style: TextStyle(fontSize: 18)),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context, false);
+                  // Ir a crear cuenta
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                child: const Text(
+                  'Crear Cuenta',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text(
+                  'Salir y Borrar',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        );
+
+        if (confirm == true && context.mounted) {
+          await prefs.remove('guest_mode');
+          // Limpiar datos locales
+          await LocalDataSource().clearAllData();
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+          );
+        }
+      } else {
+        // Usuario normal con Firebase
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text(
+              '¿Cerrar Sesión?',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            content: const Text(
+              'Tus datos se guardarán y podrás acceder nuevamente cuando inicies sesión.',
+              style: TextStyle(fontSize: 18),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar', style: TextStyle(fontSize: 18)),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text(
+                  'Cerrar Sesión',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        );
+
+        if (confirm == true && context.mounted) {
+          await FirebaseAuth.instance.signOut();
+        }
+      }
+    }
+  },
+),
+    const SizedBox(width: 8),
+  ],
+),
       body: BlocConsumer<ReminderBloc, ReminderState>(
         listener: (context, state) {
           // Lógica de listener (errores y éxito) simplificada con textos más grandes

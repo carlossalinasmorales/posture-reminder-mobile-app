@@ -21,19 +21,21 @@ class ReminderRepositoryImpl implements ReminderRepository {
   Future<Either<String, Reminder>> createReminder(Reminder reminder) async {
     try {
       final model = ReminderModel.fromEntity(reminder);
-
-      // Guardar localmente
+      
+      // 1. Guardar localmente primero
       await localDataSource.insertReminder(model);
-
-      // Programar notificación
+      
+      // 2. Programar notificación
       await notificationService.scheduleReminder(reminder);
-
-      // Sincronizar con Firebase
-      try {
-        await firebaseDataSource.saveReminder(model);
-      } catch (e) {
-        // Si falla Firebase, continuar con datos locales
-        print('Error sincronizando con Firebase: $e');
+      
+      // 3. Sincronizar con Firebase si está autenticado
+      if (firebaseDataSource.isAuthenticated) {
+        try {
+          await firebaseDataSource.saveReminder(model);
+        } catch (e) {
+          print('Error sincronizando con Firebase: $e');
+          // Continuar aunque falle Firebase
+        }
       }
 
       return Right(reminder);
@@ -46,19 +48,20 @@ class ReminderRepositoryImpl implements ReminderRepository {
   Future<Either<String, Reminder>> updateReminder(Reminder reminder) async {
     try {
       final model = ReminderModel.fromEntity(reminder);
-
+      
       await localDataSource.updateReminder(model);
-
-      // Cancelar notificación anterior y programar nueva
+      
       await notificationService.cancelReminder(reminder.id);
       if (reminder.isActive && reminder.status == ReminderStatus.pending) {
         await notificationService.scheduleReminder(reminder);
       }
-
-      try {
-        await firebaseDataSource.saveReminder(model);
-      } catch (e) {
-        print('Error sincronizando con Firebase: $e');
+      
+      if (firebaseDataSource.isAuthenticated) {
+        try {
+          await firebaseDataSource.saveReminder(model);
+        } catch (e) {
+          print('Error sincronizando con Firebase: $e');
+        }
       }
 
       return Right(reminder);
@@ -72,11 +75,13 @@ class ReminderRepositoryImpl implements ReminderRepository {
     try {
       await localDataSource.deleteReminder(id);
       await notificationService.cancelReminder(id);
-
-      try {
-        await firebaseDataSource.deleteReminder(id);
-      } catch (e) {
-        print('Error eliminando de Firebase: $e');
+      
+      if (firebaseDataSource.isAuthenticated) {
+        try {
+          await firebaseDataSource.deleteReminder(id);
+        } catch (e) {
+          print('Error eliminando de Firebase: $e');
+        }
       }
 
       return const Right(null);
@@ -119,40 +124,41 @@ class ReminderRepositoryImpl implements ReminderRepository {
 
   @override
   Future<Either<String, void>> syncWithFirebase() async {
+    if (!firebaseDataSource.isAuthenticated) {
+      return const Left('Usuario no autenticado');
+    }
+
     try {
       // Obtener recordatorios locales
       final localReminders = await localDataSource.getAllReminders();
-
+      
       // Obtener recordatorios de Firebase
       final firebaseReminders = await firebaseDataSource.getAllReminders();
-
-      // Sincronizar (merge strategy: más reciente gana)
+      
+      // Merge strategy: más reciente gana
       final Map<String, ReminderModel> mergedMap = {};
-
-      // Agregar recordatorios locales
+      
       for (final reminder in localReminders) {
         mergedMap[reminder.id] = reminder;
       }
-
-      // Actualizar con recordatorios de Firebase si son más recientes
+      
       for (final reminder in firebaseReminders) {
         final local = mergedMap[reminder.id];
-        if (local == null ||
-            (reminder.updatedAt?.isAfter(local.updatedAt ?? local.createdAt) ??
-                false)) {
+        if (local == null || 
+            (reminder.updatedAt?.isAfter(local.updatedAt ?? local.createdAt) ?? false)) {
           mergedMap[reminder.id] = reminder;
         }
       }
-
+      
       // Guardar localmente
       for (final reminder in mergedMap.values) {
         await localDataSource.insertReminder(reminder);
       }
-
+      
       // Sincronizar a Firebase
       await firebaseDataSource.syncReminders(mergedMap.values.toList());
       await firebaseDataSource.updateLastSyncTime();
-
+      
       // Re-programar notificaciones
       await _reschedulePendingNotifications(mergedMap.values.toList());
 
@@ -164,7 +170,7 @@ class ReminderRepositoryImpl implements ReminderRepository {
 
   Future<void> _reschedulePendingNotifications(List<Reminder> reminders) async {
     await notificationService.cancelAllReminders();
-
+    
     for (final reminder in reminders) {
       if (reminder.isActive && reminder.status == ReminderStatus.pending) {
         await notificationService.scheduleReminder(reminder);
@@ -193,8 +199,7 @@ class ReminderRepositoryImpl implements ReminderRepository {
   }
 
   @override
-  Future<Either<String, void>> postponeReminder(
-      String id, Duration duration) async {
+  Future<Either<String, void>> postponeReminder(String id, Duration duration) async {
     try {
       final reminder = await localDataSource.getReminderById(id);
       if (reminder == null) {
@@ -209,8 +214,7 @@ class ReminderRepositoryImpl implements ReminderRepository {
       );
 
       await updateReminder(updated);
-
-      // Programar notificación para el tiempo aplazado
+      
       final postponedReminder = updated.copyWith(
         dateTime: postponedUntil,
       );
@@ -234,10 +238,13 @@ class ReminderRepositoryImpl implements ReminderRepository {
 
   @override
   Stream<List<Reminder>> watchReminders() {
+    if (!firebaseDataSource.isAuthenticated) {
+      return Stream.value([]);
+    }
+
     try {
       return firebaseDataSource.remindersStream();
     } catch (e) {
-      // Si falla Firebase, retornar stream vacío
       return Stream.value([]);
     }
   }
