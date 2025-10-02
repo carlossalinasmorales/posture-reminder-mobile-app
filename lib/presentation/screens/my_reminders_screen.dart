@@ -163,10 +163,7 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
                                 onComplete: () => context
                                     .read<ReminderBloc>()
                                     .add(CompleteReminder(reminder.id)),
-                                onPostpone: () => context
-                                    .read<ReminderBloc>()
-                                    .add(PostponeReminder(reminder.id,
-                                        const Duration(minutes: 5))),
+                                onPostpone: null,
                                 onSkip: () => context
                                     .read<ReminderBloc>()
                                     .add(SkipReminder(reminder.id)),

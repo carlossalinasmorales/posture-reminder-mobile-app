@@ -222,12 +222,16 @@ class ReminderBloc extends Bloc<ReminderEvent, ReminderState> {
 
     final result = await repository.createReminder(reminder);
 
-    result.fold(
-      (error) => emit(ReminderError(error)),
-      (_) {
+    await result.fold(
+      (error) async => emit(ReminderError(error)),
+      (_) async {
         emit(
             const ReminderOperationSuccess('Recordatorio creado exitosamente'));
-        add(LoadReminders());
+        // Esperar un tick para que el estado de éxito se procese
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!emit.isDone) {
+          add(LoadReminders());
+        }
       },
     );
   }
@@ -239,11 +243,14 @@ class ReminderBloc extends Bloc<ReminderEvent, ReminderState> {
     final updated = event.reminder.copyWith(updatedAt: DateTime.now());
     final result = await repository.updateReminder(updated);
 
-    result.fold(
-      (error) => emit(ReminderError(error)),
-      (_) {
+    await result.fold(
+      (error) async => emit(ReminderError(error)),
+      (_) async {
         emit(const ReminderOperationSuccess('Recordatorio actualizado'));
-        add(LoadReminders());
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!emit.isDone) {
+          add(LoadReminders());
+        }
       },
     );
   }
@@ -254,11 +261,14 @@ class ReminderBloc extends Bloc<ReminderEvent, ReminderState> {
   ) async {
     final result = await repository.deleteReminder(event.id);
 
-    result.fold(
-      (error) => emit(ReminderError(error)),
-      (_) {
+    await result.fold(
+      (error) async => emit(ReminderError(error)),
+      (_) async {
         emit(const ReminderOperationSuccess('Recordatorio eliminado'));
-        add(LoadReminders());
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!emit.isDone) {
+          add(LoadReminders());
+        }
       },
     );
   }
@@ -269,11 +279,14 @@ class ReminderBloc extends Bloc<ReminderEvent, ReminderState> {
   ) async {
     final result = await repository.completeReminder(event.id);
 
-    result.fold(
-      (error) => emit(ReminderError(error)),
-      (_) {
+    await result.fold(
+      (error) async => emit(ReminderError(error)),
+      (_) async {
         emit(const ReminderOperationSuccess('¡Recordatorio completado!'));
-        add(LoadReminders());
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!emit.isDone) {
+          add(LoadReminders());
+        }
       },
     );
   }
@@ -284,11 +297,14 @@ class ReminderBloc extends Bloc<ReminderEvent, ReminderState> {
   ) async {
     final result = await repository.postponeReminder(event.id, event.duration);
 
-    result.fold(
-      (error) => emit(ReminderError(error)),
-      (_) {
+    await result.fold(
+      (error) async => emit(ReminderError(error)),
+      (_) async {
         emit(const ReminderOperationSuccess('Recordatorio aplazado'));
-        add(LoadReminders());
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!emit.isDone) {
+          add(LoadReminders());
+        }
       },
     );
   }
@@ -299,8 +315,8 @@ class ReminderBloc extends Bloc<ReminderEvent, ReminderState> {
   ) async {
     final reminderResult = await repository.getReminderById(event.id);
 
-    reminderResult.fold(
-      (error) => emit(ReminderError(error)),
+    await reminderResult.fold(
+      (error) async => emit(ReminderError(error)),
       (reminder) async {
         if (reminder == null) {
           emit(const ReminderError('Recordatorio no encontrado'));
@@ -313,11 +329,14 @@ class ReminderBloc extends Bloc<ReminderEvent, ReminderState> {
         );
 
         final result = await repository.updateReminder(updated);
-        result.fold(
-          (error) => emit(ReminderError(error)),
-          (_) {
+        await result.fold(
+          (error) async => emit(ReminderError(error)),
+          (_) async {
             emit(const ReminderOperationSuccess('Recordatorio omitido'));
-            add(LoadReminders());
+            await Future.delayed(const Duration(milliseconds: 100));
+            if (!emit.isDone) {
+              add(LoadReminders());
+            }
           },
         );
       },
@@ -351,9 +370,9 @@ class ReminderBloc extends Bloc<ReminderEvent, ReminderState> {
 
     final result = await repository.syncWithFirebase();
 
-    result.fold(
-      (error) => emit(ReminderError(error)),
-      (_) {
+    await result.fold(
+      (error) async => emit(ReminderError(error)),
+      (_) async {
         add(LoadReminders());
       },
     );
@@ -367,7 +386,7 @@ class ReminderBloc extends Bloc<ReminderEvent, ReminderState> {
 
     _reminderSubscription = repository.watchReminders().listen(
       (reminders) {
-        if (!isClosed) {
+        if (!isClosed && !emit.isDone) {
           add(LoadReminders());
         }
       },
@@ -377,14 +396,12 @@ class ReminderBloc extends Bloc<ReminderEvent, ReminderState> {
   List<Reminder> _sortReminders(List<Reminder> reminders) {
     final sorted = List<Reminder>.from(reminders);
     sorted.sort((a, b) {
-      // Primero por estado (pendientes primero)
       if (a.status != b.status) {
         if (a.status == ReminderStatus.pending) return -1;
         if (b.status == ReminderStatus.pending) return 1;
         if (a.status == ReminderStatus.postponed) return -1;
         if (b.status == ReminderStatus.postponed) return 1;
       }
-      // Luego por fecha
       return a.dateTime.compareTo(b.dateTime);
     });
     return sorted;

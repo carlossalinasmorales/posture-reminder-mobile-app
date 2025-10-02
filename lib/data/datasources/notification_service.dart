@@ -3,6 +3,13 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import '../../domain/entities/reminder.dart';
 
+// Callback global para manejar acciones en segundo plano
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse response) {
+  // Este método se ejecuta cuando se toca la notificación en segundo plano
+  print('Notificación tocada en segundo plano: ${response.actionId}');
+}
+
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
@@ -10,6 +17,9 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
+
+  // Callback para manejar acciones
+  Function(String reminderId, String action)? onActionReceived;
 
   Future<void> initialize() async {
     tz.initializeTimeZones();
@@ -30,6 +40,7 @@ class NotificationService {
     await _notifications.initialize(
       initSettings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
+      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
   }
 
@@ -48,16 +59,14 @@ class NotificationService {
   }
 
   void _onNotificationTapped(NotificationResponse response) {
-    // Manejar la acción de la notificación
     final payload = response.payload;
     final action = response.actionId;
 
-    if (action == 'complete') {
-      // Marcar como completado
-      _handleCompleteAction(payload);
-    } else if (action == 'postpone') {
-      // Aplazar recordatorio
-      _handlePostponeAction(payload);
+    print('Notificación tocada - Payload: $payload, Action: $action');
+
+    if (payload != null && action != null) {
+      // Llamar al callback registrado
+      onActionReceived?.call(payload, action);
     }
   }
 
@@ -65,13 +74,11 @@ class NotificationService {
     final now = DateTime.now();
     var scheduledDate = reminder.dateTime;
 
-    // Si la fecha ya pasó y es un recordatorio único, no programar
     if (scheduledDate.isBefore(now) &&
         reminder.frequency == ReminderFrequency.once) {
       return;
     }
 
-    // Ajustar fecha si ya pasó según la frecuencia
     if (scheduledDate.isBefore(now)) {
       scheduledDate = _getNextOccurrence(reminder);
     }
@@ -88,16 +95,18 @@ class NotificationService {
         reminder.description,
         contentTitle: reminder.title,
       ),
-      actions: [
+      actions: <AndroidNotificationAction>[
         const AndroidNotificationAction(
           'complete',
-          'Completado',
-          icon: DrawableResourceAndroidBitmap('@drawable/ic_check'),
+          '✓ Completar',
+          showsUserInterface: false,
+          cancelNotification: true,
         ),
         const AndroidNotificationAction(
           'postpone',
-          'Aplazar 2 min',
-          icon: DrawableResourceAndroidBitmap('@drawable/ic_snooze'),
+          '⏰ Aplazar 2 min',
+          showsUserInterface: false,
+          cancelNotification: true,
         ),
       ],
     );
@@ -106,6 +115,7 @@ class NotificationService {
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
+      categoryIdentifier: 'postureReminder',
     );
 
     final notificationDetails = NotificationDetails(
@@ -113,7 +123,6 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    // Programar según frecuencia
     switch (reminder.frequency) {
       case ReminderFrequency.once:
         await _notifications.zonedSchedule(
@@ -154,7 +163,6 @@ class NotificationService {
         break;
 
       case ReminderFrequency.custom:
-        // Para recordatorios personalizados, programar múltiples notificaciones
         await _scheduleCustomReminder(reminder, notificationDetails);
         break;
     }
@@ -165,7 +173,6 @@ class NotificationService {
     NotificationDetails details,
   ) async {
     if (reminder.customDays != null && reminder.customDays!.isNotEmpty) {
-      // Programar para días específicos de la semana
       for (final day in reminder.customDays!) {
         final nextDate = _getNextDateForWeekday(reminder.dateTime, day);
         await _notifications.zonedSchedule(
@@ -180,11 +187,9 @@ class NotificationService {
         );
       }
     } else if (reminder.customInterval != null) {
-      // Programar cada X días
       var currentDate = reminder.dateTime;
       final now = DateTime.now();
 
-      // Programar las próximas 10 ocurrencias
       for (var i = 0; i < 10; i++) {
         if (currentDate.isAfter(now)) {
           await _notifications.zonedSchedule(
@@ -280,15 +285,5 @@ class NotificationService {
       notificationDetails,
       payload: reminder.id,
     );
-  }
-
-  void _handleCompleteAction(String? reminderId) {
-    // Esta función será llamada desde el BLoC
-    print('Recordatorio completado: $reminderId');
-  }
-
-  void _handlePostponeAction(String? reminderId) {
-    // Esta función será llamada desde el BLoC
-    print('Recordatorio aplazado: $reminderId');
   }
 }

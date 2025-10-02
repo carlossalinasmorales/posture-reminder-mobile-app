@@ -5,7 +5,7 @@ import '../../domain/entities/reminder.dart';
 class ReminderCard extends StatelessWidget {
   final Reminder reminder;
   final VoidCallback? onComplete;
-  final VoidCallback? onPostpone;
+  final VoidCallback? onPostpone; // Se mantiene pero no se usa en el card
   final VoidCallback? onSkip;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -44,7 +44,7 @@ class ReminderCard extends StatelessWidget {
                         Text(
                           reminder.title,
                           style: const TextStyle(
-                            fontSize: 22,
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF2C3E50),
                           ),
@@ -53,7 +53,7 @@ class ReminderCard extends StatelessWidget {
                         Text(
                           _getFrequencyText(),
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
                             color: Colors.grey[600],
                             fontWeight: FontWeight.w500,
                           ),
@@ -68,7 +68,7 @@ class ReminderCard extends StatelessWidget {
               Text(
                 reminder.description,
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   color: Colors.grey[700],
                   height: 1.4,
                 ),
@@ -135,22 +135,6 @@ class ReminderCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: onPostpone,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF39C12),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Icon(Icons.snooze, size: 20),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
@@ -223,7 +207,7 @@ class ReminderCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(icon, color: color, size: 28),
@@ -256,9 +240,9 @@ class ReminderCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
         text,
