@@ -6,6 +6,7 @@ import 'data/datasources/notification_service.dart';
 import 'data/repositories/reminder_repository_impl_no_firebase.dart';
 import 'presentation/bloc/reminder_bloc.dart';
 import 'presentation/screens/home_screen.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,6 +60,18 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Recordatorios de Postura',
         debugShowCheckedModeBanner: false,
+
+        // AGREGAR ESTAS LÍNEAS:
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('es', 'ES'),
+        ],
+        locale: const Locale('es', 'ES'),
+
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(

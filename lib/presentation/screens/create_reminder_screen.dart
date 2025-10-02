@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../domain/entities/reminder.dart';
@@ -23,35 +24,6 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
   int? _customInterval;
 
   bool get _isEditing => widget.reminder != null;
-
-  // // Sugerencias predefinidas para personas mayores
-  // final List<Map<String, String>> _suggestions = [
-  //   {
-  //     'title': 'Endereza tu espalda',
-  //     'description':
-  //         'Recuerda estar sentado con la espalda recta y los pies apoyados en el suelo.',
-  //   },
-  //   {
-  //     'title': 'Revisa tu postura',
-  //     'description':
-  //         'Asegúrate de que tus hombros estén relajados y tu cabeza alineada con la columna.',
-  //   },
-  //   {
-  //     'title': 'Pausa para estirar',
-  //     'description':
-  //         'Levántate y estira los brazos hacia arriba. Gira suavemente el cuello a ambos lados.',
-  //   },
-  //   {
-  //     'title': 'Camina un poco',
-  //     'description':
-  //         'Da una vuelta corta por tu casa. El movimiento ayuda a tu circulación y postura.',
-  //   },
-  //   {
-  //     'title': 'Relaja los hombros',
-  //     'description':
-  //         'Baja los hombros, respira profundo y libera la tensión acumulada.',
-  //   },
-  // ];
 
   @override
   void initState() {
@@ -104,9 +76,6 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            // // Sugerencias rápidas
-            // if (!_isEditing) _buildSuggestionsSection(),
-
             const SizedBox(height: 20),
 
             // Título
@@ -184,56 +153,6 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
     );
   }
 
-  // Widget _buildSuggestionsSection() {
-  //   return Card(
-  //     elevation: 2,
-  //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-  //     child: Padding(
-  //       padding: const EdgeInsets.all(16),
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           const Row(
-  //             children: [
-  //               Icon(Icons.lightbulb, color: Color(0xFFF39C12), size: 24),
-  //               SizedBox(width: 8),
-  //               Text(
-  //                 'Sugerencias rápidas',
-  //                 style: TextStyle(
-  //                   fontSize: 18,
-  //                   fontWeight: FontWeight.bold,
-  //                   color: Color(0xFF2C3E50),
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //           const SizedBox(height: 12),
-  //           Wrap(
-  //             spacing: 8,
-  //             runSpacing: 8,
-  //             children: _suggestions.map((suggestion) {
-  //               return ActionChip(
-  //                 label: Text(
-  //                   suggestion['title']!,
-  //                   style: const TextStyle(fontSize: 14),
-  //                 ),
-  //                 onPressed: () {
-  //                   setState(() {
-  //                     _titleController.text = suggestion['title']!;
-  //                     _descriptionController.text = suggestion['description']!;
-  //                   });
-  //                 },
-  //                 backgroundColor: const Color(0xFF3498DB).withOpacity(0.1),
-  //                 labelStyle: const TextStyle(color: Color(0xFF3498DB)),
-  //               );
-  //             }).toList(),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -297,7 +216,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
                     onPressed: _selectDate,
                     icon: const Icon(Icons.calendar_today),
                     label: Text(
-                      DateFormat('dd/MM/yyyy').format(_selectedDateTime),
+                      DateFormat('dd/MM/yyyy', 'es').format(_selectedDateTime),
                       style: const TextStyle(fontSize: 16),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -360,25 +279,13 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
             ),
             const SizedBox(height: 12),
             _buildFrequencyOption(
-              'Una vez',
-              ReminderFrequency.once,
-              Icons.event,
-            ),
+                'Una vez', ReminderFrequency.once, Icons.event),
             _buildFrequencyOption(
-              'Todos los días',
-              ReminderFrequency.daily,
-              Icons.today,
-            ),
+                'Todos los días', ReminderFrequency.daily, Icons.today),
+            _buildFrequencyOption('Cada semana', ReminderFrequency.weekly,
+                Icons.calendar_view_week),
             _buildFrequencyOption(
-              'Cada semana',
-              ReminderFrequency.weekly,
-              Icons.calendar_view_week,
-            ),
-            _buildFrequencyOption(
-              'Personalizado',
-              ReminderFrequency.custom,
-              Icons.settings,
-            ),
+                'Personalizado', ReminderFrequency.custom, Icons.settings),
           ],
         ),
       ),
@@ -407,11 +314,10 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
           ),
           child: Row(
             children: [
-              Icon(
-                icon,
-                color: isSelected ? const Color(0xFF3498DB) : Colors.grey[600],
-                size: 24,
-              ),
+              Icon(icon,
+                  color:
+                      isSelected ? const Color(0xFF3498DB) : Colors.grey[600],
+                  size: 24),
               const SizedBox(width: 12),
               Text(
                 label,
@@ -425,11 +331,8 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
               ),
               const Spacer(),
               if (isSelected)
-                const Icon(
-                  Icons.check_circle,
-                  color: Color(0xFF3498DB),
-                  size: 24,
-                ),
+                const Icon(Icons.check_circle,
+                    color: Color(0xFF3498DB), size: 24),
             ],
           ),
         ),
@@ -449,10 +352,9 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
             const Text(
               'Opciones personalizadas',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2C3E50),
-              ),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2C3E50)),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -466,7 +368,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
               children: [
                 _buildDayChip('L', 1),
                 _buildDayChip('M', 2),
-                _buildDayChip('M', 3),
+                _buildDayChip('X', 3),
                 _buildDayChip('J', 4),
                 _buildDayChip('V', 5),
                 _buildDayChip('S', 6),
@@ -490,19 +392,14 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
                       hintText: 'Número',
                       suffixText: 'días',
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                          borderRadius: BorderRadius.circular(12)),
                       contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
+                          horizontal: 16, vertical: 14),
                     ),
                     onChanged: (value) {
                       setState(() {
                         _customInterval = int.tryParse(value);
-                        if (_customInterval != null) {
-                          _selectedDays = [];
-                        }
+                        if (_customInterval != null) _selectedDays = [];
                       });
                     },
                   ),
@@ -551,12 +448,11 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
       initialDate: _selectedDateTime,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
+      locale: const Locale('es', 'ES'),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF3498DB),
-            ),
+            colorScheme: const ColorScheme.light(primary: Color(0xFF3498DB)),
           ),
           child: child!,
         );
@@ -577,32 +473,81 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
   }
 
   Future<void> _selectTime() async {
-    final TimeOfDay? picked = await showTimePicker(
+    // Usar selector estilo iOS (CupertinoDatePicker)
+    await showModalBottomSheet(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF3498DB),
-            ),
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext builder) {
+        DateTime tempDateTime = _selectedDateTime;
+        return Container(
+          height: 300,
+          padding: const EdgeInsets.only(top: 20),
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                    ),
+                    const Text(
+                      'Selecciona la hora',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2C3E50),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() => _selectedDateTime = tempDateTime);
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Listo',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF3498DB),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              // Selector de hora estilo iOS
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.time,
+                  use24hFormat: true,
+                  initialDateTime: _selectedDateTime,
+                  onDateTimeChanged: (DateTime newDateTime) {
+                    tempDateTime = DateTime(
+                      _selectedDateTime.year,
+                      _selectedDateTime.month,
+                      _selectedDateTime.day,
+                      newDateTime.hour,
+                      newDateTime.minute,
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-          child: child!,
         );
       },
     );
-
-    if (picked != null) {
-      setState(() {
-        _selectedDateTime = DateTime(
-          _selectedDateTime.year,
-          _selectedDateTime.month,
-          _selectedDateTime.day,
-          picked.hour,
-          picked.minute,
-        );
-      });
-    }
   }
 
   void _saveReminder() {
