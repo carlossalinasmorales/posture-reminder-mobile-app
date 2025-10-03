@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../screens/login_screen.dart';
 import '../../data/datasources/local_datasource.dart';
+import '../../theme/app_styles.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -56,23 +57,18 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Usar un fondo blanco sólido para máximo contraste
-      backgroundColor: Colors.white,
+      backgroundColor: kWhiteColor,
       appBar: AppBar(
-  elevation: 1,
-  backgroundColor: Colors.white,
-  title: const Text(
-    'Recordatorios de Postura',
-    style: TextStyle(
-      color: Color(0xFF2C3E50),
-      fontSize: 26,
-      fontWeight: FontWeight.w900,
-    ),
-  ),
+        elevation: kDefaultElevation,
+        backgroundColor: kWhiteColor,
+        title: const Text(
+          'Recordatorios de Postura',
+          style: kTitleTextStyle,
+        ),
   actions: [
     // Botón de cerrar sesión
     PopupMenuButton<String>(
-  icon: const Icon(Icons.more_vert, color: Color(0xFF2C3E50), size: 28),
+  icon: const Icon(Icons.more_vert, color: kContrastColor, size: kMediumIconSize),
   itemBuilder: (context) => [
     // AGREGAR ESTA LÍNEA PARA MOSTRAR ESTADO
     PopupMenuItem(
@@ -82,9 +78,9 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, snapshot) {
           return Text(
             snapshot.data ?? 'Cargando...',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
+            style: const TextStyle(
+              fontSize: kExtraSmallFontSize,
+              color: Colors.grey,
               fontWeight: FontWeight.bold,
             ),
           );
@@ -98,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Icon(Icons.logout, color: Colors.red),
           SizedBox(width: 12),
-          Text('Cerrar Sesión', style: TextStyle(fontSize: 18)),
+          Text('Cerrar Sesión', style: const TextStyle(fontSize: kSmallFontSize)),
         ],
       ),
     ),
@@ -115,11 +111,11 @@ class _HomeScreenState extends State<HomeScreen> {
           builder: (context) => AlertDialog(
             title: const Text(
               '¿Salir como Invitado?',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: kSubtitleTextStyle,
             ),
             content: const Text(
               '⚠️ Si sales como invitado, perderás TODOS tus datos. ¿Deseas crear una cuenta para guardar tus recordatorios?',
-              style: TextStyle(fontSize: 18),
+              style: kBodyTextStyle,
             ),
             actions: [
               TextButton(
@@ -134,18 +130,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     MaterialPageRoute(builder: (_) => const LoginScreen()),
                   );
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                style: ElevatedButton.styleFrom(backgroundColor: kSuccessColor),
                 child: const Text(
                   'Crear Cuenta',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+                  style: TextStyle(fontSize: kSmallFontSize, color: kWhiteColor),
                 ),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                style: ElevatedButton.styleFrom(backgroundColor: kErrorColor),
                 child: const Text(
                   'Salir y Borrar',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+                  style: TextStyle(fontSize: kSmallFontSize, color: kWhiteColor),
                 ),
               ),
             ],
@@ -167,11 +163,11 @@ class _HomeScreenState extends State<HomeScreen> {
           builder: (context) => AlertDialog(
             title: const Text(
               '¿Cerrar Sesión?',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: kSubtitleTextStyle,
             ),
             content: const Text(
               'Tus datos se guardarán y podrás acceder nuevamente cuando inicies sesión.',
-              style: TextStyle(fontSize: 18),
+              style: kBodyTextStyle,
             ),
             actions: [
               TextButton(
@@ -180,10 +176,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                style: ElevatedButton.styleFrom(backgroundColor: kErrorColor),
                 child: const Text(
                   'Cerrar Sesión',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+                  style: TextStyle(fontSize: kSmallFontSize, color: kWhiteColor),
                 ),
               ),
             ],
@@ -210,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   state.message.contains('sincronizar') 
                     ? 'Error de sincronización'
                     : 'Error inesperado',
-                  style: const TextStyle(fontSize: 16),
+                  style: const TextStyle(fontSize: kSmallFontSize),
                 ),
                 backgroundColor: Colors.red[700],
                 duration: const Duration(seconds: 3),
@@ -225,15 +221,15 @@ class _HomeScreenState extends State<HomeScreen> {
           if (state is ReminderLoading) {
             return const Center(
               child: CircularProgressIndicator(
-                strokeWidth: 4, // Grosor mayor
-                color: Color(0xFF3498DB),
+                strokeWidth: 4,
+                color: kPrimaryColor,
               ),
             );
           }
 
           return SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(24), // Mayor padding general
+              padding: const EdgeInsets.all(kLargePadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -247,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     context: context,
                     title: 'Ver Mis Recordatorios', // Título más claro y activo
                     icon: Icons.list_alt,
-                    color: const Color(0xFF007AFF), // Azul más fuerte y moderno
+                    color: kPrimaryColor,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -266,8 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     title:
                         'Crear Nuevo Recordatorio', // Título más claro y activo
                     icon: Icons.add_circle,
-                    color:
-                        const Color(0xFF34C759), // Verde más fuerte y moderno
+                    color: kSuccessColor,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -295,12 +290,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildWelcomeCard() {
     return Card(
-      elevation: 4, // Mayor elevación
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: kMediumElevation,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kExtraLargeBorderRadius)),
       child: Container(
-        padding: const EdgeInsets.all(24), // Mayor padding interno
+        padding: const EdgeInsets.all(kLargePadding),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(kExtraLargeBorderRadius),
           // Se mantiene el gradiente, pero se mejora el color
           gradient: const LinearGradient(
             colors: [
@@ -317,16 +312,16 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               children: const [
                 Icon(
-                  Icons.favorite_border, // Icono más amigable
-                  color: Colors.white,
-                  size: 48, // Icono más grande
+                  Icons.favorite_border,
+                  color: kWhiteColor,
+                  size: 48,
                 ),
                 SizedBox(width: 16),
                 Text(
-                  '¡Hola!', // Mensaje más breve y directo
+                  '¡Hola!',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 32, // Título de bienvenida más grande
+                    color: kWhiteColor,
+                    fontSize: kExtraLargePadding,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -336,9 +331,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               'Estaremos aquí para cuidar de tu postura. Es por tu bienestar.',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.95),
-                fontSize: 18, // Texto más grande
-                height: 1.2, // Mayor espaciado entre líneas
+                color: kWhiteColor.withValues(alpha: 0.95),
+                fontSize: kSmallFontSize,
+                height: 1.2,
               ),
             ),
           ],
@@ -356,21 +351,19 @@ class _HomeScreenState extends State<HomeScreen> {
     required VoidCallback onTap,
   }) {
     return Card(
-      elevation: 4, // Mayor elevación
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: kMediumElevation,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kExtraLargeBorderRadius)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(kExtraLargeBorderRadius),
         child: Padding(
           padding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical:
-                  30), // Padding vertical más grande para facilitar el toque
+              horizontal: kLargePadding,
+              vertical: 30),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(
-                    18), // Mayor padding para el círculo del icono
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: color.withValues(
                       alpha: 0.1), // Opacidad reducida para menos distracción
@@ -387,17 +380,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 22, // Título de botón más grande
+                    fontSize: kMediumFontSize,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
+                    color: kContrastColor,
                   ),
                 ),
               ),
-              // Flecha de navegación más grande
               Icon(
                 Icons.arrow_forward_ios,
-                color: color, // Usar el color del botón
-                size: 24,
+                color: color,
+                size: kMediumIconSize,
               ),
             ],
           ),
@@ -408,25 +400,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildTipsCard() {
     return Card(
-      elevation: 3, // Ligera elevación
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kLargeBorderRadius)),
       child: Padding(
-        padding: const EdgeInsets.all(24), // Mayor padding interno
+        padding: const EdgeInsets.all(kLargePadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: const [
-                Icon(Icons.lightbulb_outline, // Icono más claro
+                Icon(Icons.lightbulb_outline,
                     color: Color(0xFFF39C12),
-                    size: 30), // Icono más grande
+                    size: 30),
                 SizedBox(width: 12),
                 Text(
                   'Mejora tu Postura',
                   style: TextStyle(
-                    fontSize: 22, // Título de consejos más grande
+                    fontSize: kMediumFontSize,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
+                    color: kContrastColor,
                   ),
                 ),
               ],
@@ -445,23 +437,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildTipItem(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16), // Más espacio entre ítems
+      padding: const EdgeInsets.only(bottom: kDefaultPadding),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Icon(
-            Icons.check_circle_outline, // Icono de verificación más suave
-            color: Color(0xFF34C759), // Verde más fuerte
-            size: 26, // Icono más grande
+            Icons.check_circle_outline,
+            color: kSuccessColor,
+            size: 26,
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: kDefaultPadding),
           Expanded(
             child: Text(
               text,
               style: const TextStyle(
-                fontSize: 18, // Texto de lista más grande
-                color: Color(0xFF4A4A4A), // Gris oscuro para mejor contraste
-                height: 1.5, // Mayor espaciado entre líneas
+                fontSize: kSmallFontSize,
+                color: Color(0xFF4A4A4A),
+                height: 1.5,
               ),
             ),
           ),
@@ -481,10 +473,10 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Material(
           color: Colors.transparent,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: kDefaultPadding, vertical: kSmallPadding),
             decoration: BoxDecoration(
               color: Colors.green[600],
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(kExtraLargeBorderRadius),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
@@ -498,15 +490,15 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Icon(
                   Icons.check_circle,
-                  color: Colors.white,
-                  size: 20,
+                  color: kWhiteColor,
+                  size: kSmallIconSize,
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: kSmallPadding),
                 Text(
                   'Listo',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
+                    color: kWhiteColor,
+                    fontSize: kExtraSmallFontSize,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
