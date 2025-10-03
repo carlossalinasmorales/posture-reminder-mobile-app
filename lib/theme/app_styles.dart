@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 // Colores principales
 const Color kPrimaryColor = Color.fromARGB(255, 164, 112, 223);
+const Color kSecondaryColor = Color(0xFFC06C84);
 const Color kContrastColor = Color(0xFF2C3E50); // Gris oscuro para texto
 const Color kBackgroundColor = Color(0xFFF5F7FA);
 const Color kWhiteColor = Colors.white;
-const Color kErrorColor = Color.fromARGB(255, 175, 40, 30);
+const Color kErrorColor = Colors.red;
 const Color kSuccessColor = Color.fromARGB(255, 54, 156, 57);
 
 // Tamaños de fuente

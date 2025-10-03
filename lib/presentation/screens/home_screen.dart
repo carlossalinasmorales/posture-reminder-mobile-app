@@ -262,7 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     title:
                         'Crear Nuevo Recordatorio', // Título más claro y activo
                     icon: Icons.add_circle,
-                    color: kSuccessColor,
+                    color: kSecondaryColor,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -299,8 +299,8 @@ class _HomeScreenState extends State<HomeScreen> {
           // Se mantiene el gradiente, pero se mejora el color
           gradient: const LinearGradient(
             colors: [
-              Color(0xFF8E44AD),
-              Color(0xFFC06C84)
+              kPrimaryColor,
+              kSecondaryColor
             ], // Tonos más cálidos y claros
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -329,7 +329,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 2),
             Text(
-              'Estaremos aquí para cuidar de tu postura. Es por tu bienestar.',
+              'Queremos ayudarte a recordar que debes cuidar tu postura para que te sientas mejor.',
               style: TextStyle(
                 color: kWhiteColor.withValues(alpha: 0.95),
                 fontSize: kSmallFontSize,
