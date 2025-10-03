@@ -135,37 +135,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
 
             // Indicador de cambios guardados y botón manual
             if (_isEditing) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: _hasUnsavedChanges ? Colors.orange[50] : Colors.green[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _hasUnsavedChanges ? Colors.orange : Colors.green,
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      _hasUnsavedChanges ? Icons.save_alt : Icons.check_circle,
-                      color: _hasUnsavedChanges ? Colors.orange : Colors.green,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _hasUnsavedChanges ? 'Guardando cambios...' : 'Cambios guardados automáticamente',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: _hasUnsavedChanges ? Colors.orange[700] : Colors.green[700],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
+              
               ElevatedButton(
                 onPressed: _saveReminder,
                 style: ElevatedButton.styleFrom(
@@ -177,7 +147,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
                   elevation: 4,
                 ),
                 child: const Text(
-                  'Guardar Cambios Manualmente',
+                  'Guardar Cambios',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
