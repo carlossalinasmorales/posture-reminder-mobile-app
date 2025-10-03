@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/reminder.dart';
@@ -22,6 +23,10 @@ class MyRemindersScreen extends StatefulWidget {
 class _MyRemindersScreenState extends State<MyRemindersScreen> {
   // El filtro ahora se representa como una cadena para el Dropdown
   String? _currentFilterLabel;
+  
+  // Variables para funcionalidad de deshacer
+  Reminder? _deletedReminder;
+  Timer? _undoTimer;
 
   @override
   void initState() {
@@ -29,6 +34,12 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
     // Inicializar el estado de filtro al cargar todos los recordatorios
     _currentFilterLabel = 'Todos';
     context.read<ReminderBloc>().add(LoadReminders());
+  }
+
+  @override
+  void dispose() {
+    _undoTimer?.cancel();
+    super.dispose();
   }
 
   // Mapeo simple de etiquetas a estados
@@ -69,23 +80,6 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.sync, color: _primaryColor, size: _iconSize),
-            onPressed: () {
-              context.read<ReminderBloc>().add(SyncWithFirebase());
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text(
-                    'Sincronizando la información...',
-                    style:
-                        TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-                  ),
-                  duration: const Duration(seconds: 2),
-                  backgroundColor: _primaryColor,
-                ),
-              );
-            },
-          ),
           const SizedBox(width: 12),
         ],
       ),
@@ -95,24 +89,18 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  '¡Error! ${state.message}',
-                  style: const TextStyle(
-                      fontSize: 18.0, fontWeight: FontWeight.bold),
+                  state.message.contains('sincronizar') 
+                    ? 'Error de sincronización'
+                    : 'Error inesperado',
+                  style: const TextStyle(fontSize: 16),
                 ),
                 backgroundColor: Colors.red[700],
+                duration: const Duration(seconds: 3),
               ),
             );
           } else if (state is ReminderOperationSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  '¡Éxito! ${state.message}',
-                  style: const TextStyle(
-                      fontSize: 18.0, fontWeight: FontWeight.bold),
-                ),
-                backgroundColor: Colors.green[700],
-              ),
-            );
+            // Mostrar indicador sutil de éxito
+            _showSubtleSuccessIndicator();
             context.read<ReminderBloc>().add(LoadReminders());
           }
         },
@@ -127,12 +115,7 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
           }
 
           if (state is ReminderLoaded) {
-            return RefreshIndicator(
-              onRefresh: () async {
-                context.read<ReminderBloc>().add(SyncWithFirebase());
-                await Future.delayed(const Duration(seconds: 1));
-              },
-              child: CustomScrollView(
+            return CustomScrollView(
                 slivers: [
                   // Filtros (Ahora un Dropdown visible y estático)
                   SliverToBoxAdapter(
@@ -181,8 +164,7 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
                     child: SizedBox(height: 100),
                   ),
                 ],
-              ),
-            );
+              );
           }
 
           return _buildEmptyState();
@@ -345,45 +327,118 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
     });
   }
 
-  void _showDeleteDialog(String id) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(
-          '¿Eliminar recordatorio?',
-          style:
-              TextStyle(fontSize: _mediumFontSize, fontWeight: FontWeight.bold),
-        ),
-        content: const Text(
-          '¿Estás seguro/a? Esta acción no se puede deshacer.',
-          style: TextStyle(fontSize: 18.0),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(fontSize: 18.0, color: _primaryColor),
+  void _showSubtleSuccessIndicator() {
+    // Mostrar indicador sutil de éxito en la esquina superior derecha
+    OverlayEntry? overlayEntry;
+    
+    overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: 100,
+        right: 20,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.green[600],
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              context.read<ReminderBloc>().add(DeleteReminder(id));
-              Navigator.pop(dialogContext);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[700],
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            ),
-            child: const Text(
-              'ELIMINAR',
-              style: TextStyle(
-                  fontSize: 18.0,
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.check_circle,
                   color: Colors.white,
-                  fontWeight: FontWeight.bold),
+                  size: 20,
+                ),
+                SizedBox(width: 8),
+                Text(
+                  'Listo',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(overlayEntry);
+
+    // Remover después de 1.5 segundos
+    Timer(const Duration(milliseconds: 1500), () {
+      overlayEntry?.remove();
+    });
+  }
+
+  void _showDeleteDialog(String id) {
+    // Obtener el recordatorio antes de eliminarlo
+    final currentState = context.read<ReminderBloc>().state;
+    if (currentState is! ReminderLoaded) return;
+    
+    _deletedReminder = currentState.reminders.firstWhere(
+      (r) => r.id == id,
+      orElse: () => throw Exception('Recordatorio no encontrado'),
+    );
+
+    // Eliminar el recordatorio
+    context.read<ReminderBloc>().add(DeleteReminder(id));
+
+    // Mostrar opción de deshacer
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${_deletedReminder!.title} eliminado'),
+        backgroundColor: Colors.grey[800],
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'DESHACER',
+          textColor: Colors.white,
+          onPressed: _undoDeletion,
+        ),
+      ),
+    );
+
+    // Programar eliminación definitiva después de 5 segundos
+    _undoTimer?.cancel();
+    _undoTimer = Timer(const Duration(seconds: 5), () {
+      _deletedReminder = null;
+    });
+  }
+
+  void _undoDeletion() {
+    if (_deletedReminder == null) return;
+
+    // Restaurar el recordatorio
+    context.read<ReminderBloc>().add(CreateReminder(
+      title: _deletedReminder!.title,
+      description: _deletedReminder!.description,
+      dateTime: _deletedReminder!.dateTime,
+      frequency: _deletedReminder!.frequency,
+      customDays: _deletedReminder!.customDays,
+      customInterval: _deletedReminder!.customInterval,
+    ));
+
+    // Limpiar variables
+    _deletedReminder = null;
+    _undoTimer?.cancel();
+
+    // Mostrar confirmación
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Recordatorio restaurado'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
       ),
     );
   }

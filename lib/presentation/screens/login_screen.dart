@@ -77,6 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
           SnackBar(
             content: Text(message, style: const TextStyle(fontSize: 16)),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -107,6 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SnackBar(
             content: Text('Error al continuar como invitado'),
             backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
           ),
         );
       }

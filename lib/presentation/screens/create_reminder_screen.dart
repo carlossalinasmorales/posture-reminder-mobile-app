@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -21,6 +22,9 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
   ReminderFrequency _frequency = ReminderFrequency.once;
   List<int> _selectedDays = [];
   int? _customInterval;
+  
+  Timer? _debounceTimer;
+  bool _hasUnsavedChanges = false;
 
   bool get _isEditing => widget.reminder != null;
 
@@ -44,6 +48,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _titleController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -83,6 +88,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
               label: 'Título del recordatorio',
               hint: 'Ej: Endereza tu espalda',
               icon: Icons.title,
+              onChanged: _isEditing ? _onFieldChanged : null,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Por favor ingresa un título';
@@ -100,6 +106,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
               hint: 'Explica qué hacer cuando llegue el recordatorio',
               icon: Icons.description,
               maxLines: 4,
+              onChanged: _isEditing ? _onFieldChanged : null,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Por favor ingresa una descripción';
@@ -126,26 +133,78 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
 
             const SizedBox(height: 30),
 
-            // Botón guardar
-            ElevatedButton(
-              onPressed: _saveReminder,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3498DB),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+            // Indicador de cambios guardados y botón manual
+            if (_isEditing) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: _hasUnsavedChanges ? Colors.orange[50] : Colors.green[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _hasUnsavedChanges ? Colors.orange : Colors.green,
+                    width: 1,
+                  ),
                 ),
-                elevation: 4,
-              ),
-              child: Text(
-                _isEditing ? 'Actualizar Recordatorio' : 'Crear Recordatorio',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _hasUnsavedChanges ? Icons.save_alt : Icons.check_circle,
+                      color: _hasUnsavedChanges ? Colors.orange : Colors.green,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _hasUnsavedChanges ? 'Guardando cambios...' : 'Cambios guardados automáticamente',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: _hasUnsavedChanges ? Colors.orange[700] : Colors.green[700],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _saveReminder,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3498DB),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 4,
+                ),
+                child: const Text(
+                  'Guardar Cambios Manualmente',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ] else
+              ElevatedButton(
+                onPressed: _saveReminder,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3498DB),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 4,
+                ),
+                child: const Text(
+                  'Crear Recordatorio',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -159,6 +218,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
     required IconData icon,
     int maxLines = 1,
     String? Function(String?)? validator,
+    void Function(String)? onChanged,
   }) {
     return Card(
       elevation: 2,
@@ -169,6 +229,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
           controller: controller,
           maxLines: maxLines,
           style: const TextStyle(fontSize: 16),
+          onChanged: onChanged,
           decoration: InputDecoration(
             labelText: label,
             labelStyle:
@@ -297,7 +358,10 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: InkWell(
-        onTap: () => setState(() => _frequency = freq),
+        onTap: () {
+          setState(() => _frequency = freq);
+          if (_isEditing) _onFieldChanged('');
+        },
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(12),
@@ -400,6 +464,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
                         _customInterval = int.tryParse(value);
                         if (_customInterval != null) _selectedDays = [];
                       });
+                      if (_isEditing) _onFieldChanged('');
                     },
                   ),
                 ),
@@ -433,6 +498,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
           }
           _selectedDays.sort();
         });
+        if (_isEditing) _onFieldChanged('');
       },
       backgroundColor: Colors.grey[200],
       selectedColor: const Color(0xFF3498DB),
@@ -468,6 +534,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
           _selectedDateTime.minute,
         );
       });
+      if (_isEditing) _onFieldChanged('');
     }
   }
 
@@ -701,6 +768,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
                                 selectedMinute * 5,
                               );
                             });
+                            if (_isEditing) _onFieldChanged('');
                             Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
@@ -777,7 +845,82 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
             );
       }
 
+      // Mostrar notificación de éxito solo al guardar manualmente
+      if (_isEditing) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Recordatorio actualizado exitosamente',
+              style: TextStyle(fontSize: 16),
+            ),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Recordatorio creado exitosamente',
+              style: TextStyle(fontSize: 16),
+            ),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      
       Navigator.pop(context);
     }
+  }
+
+  void _onFieldChanged(String value) {
+    if (!_isEditing) return;
+    
+    setState(() {
+      _hasUnsavedChanges = true;
+    });
+
+    // Cancelar el timer anterior si existe
+    _debounceTimer?.cancel();
+    
+    // Crear un nuevo timer para guardar después de 1 segundo de inactividad
+    _debounceTimer = Timer(const Duration(seconds: 1), () {
+      _autoSaveReminder();
+    });
+  }
+
+  void _autoSaveReminder() {
+    if (!_isEditing) return;
+
+    // Validar que los campos requeridos no estén vacíos
+    if (_titleController.text.trim().isEmpty || 
+        _descriptionController.text.trim().isEmpty) {
+      return;
+    }
+
+    // Validar frecuencia personalizada
+    if (_frequency == ReminderFrequency.custom) {
+      if (_selectedDays.isEmpty && _customInterval == null) {
+        return;
+      }
+    }
+
+    final updatedReminder = widget.reminder!.copyWith(
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      dateTime: _selectedDateTime,
+      frequency: _frequency,
+      customDays: _frequency == ReminderFrequency.custom ? _selectedDays : null,
+      customInterval: _frequency == ReminderFrequency.custom ? _customInterval : null,
+      updatedAt: DateTime.now(),
+    );
+
+    // Guardado silencioso - sin notificación
+    context.read<ReminderBloc>().add(UpdateReminder(updatedReminder));
+
+    setState(() {
+      _hasUnsavedChanges = false;
+    });
   }
 }

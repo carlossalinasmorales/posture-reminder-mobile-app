@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/reminder_bloc.dart';
@@ -33,9 +34,23 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Carga inicial y escucha de recordatorios
+    // Cargar datos locales primero
     context.read<ReminderBloc>().add(LoadReminders());
+    
+    // Sincronizar automáticamente con Firebase solo si está autenticado
+    _checkAndSyncIfAuthenticated();
+    
+    // Escuchar cambios en tiempo real
     context.read<ReminderBloc>().add(WatchReminders());
+  }
+
+  Future<void> _checkAndSyncIfAuthenticated() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // Solo sincronizar si está autenticado con Firebase
+      context.read<ReminderBloc>().add(SyncWithFirebase());
+    }
+    // Si es invitado, no hacer nada (los datos ya están locales)
   }
 
   @override
@@ -54,24 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
       fontWeight: FontWeight.w900,
     ),
   ),
-  // AGREGAR ESTA SECCIÓN
   actions: [
-    // Botón de sincronizar
-    IconButton(
-      icon: const Icon(Icons.cloud_sync, color: Color(0xFF007AFF), size: 28),
-      onPressed: () {
-        context.read<ReminderBloc>().add(SyncWithFirebase());
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Sincronizando con la nube...',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      },
-    ),
     // Botón de cerrar sesión
     PopupMenuButton<String>(
   icon: const Icon(Icons.more_vert, color: Color(0xFF2C3E50), size: 28),
@@ -204,29 +202,23 @@ class _HomeScreenState extends State<HomeScreen> {
 ),
       body: BlocConsumer<ReminderBloc, ReminderState>(
         listener: (context, state) {
-          // Lógica de listener (errores y éxito) simplificada con textos más grandes
+          // Solo mostrar errores críticos
           if (state is ReminderError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  '¡Error! ${state.message}', // Añadir exclamación
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
+                  state.message.contains('sincronizar') 
+                    ? 'Error de sincronización'
+                    : 'Error inesperado',
+                  style: const TextStyle(fontSize: 16),
                 ),
                 backgroundColor: Colors.red[700],
+                duration: const Duration(seconds: 3),
               ),
             );
           } else if (state is ReminderOperationSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  '¡Éxito! ${state.message}',
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                backgroundColor: Colors.green[700],
-              ),
-            );
+            // Mostrar indicador sutil de éxito
+            _showSubtleSuccessIndicator();
           }
         },
         builder: (context, state) {
@@ -239,13 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
 
-          // La funcionalidad de `RefreshIndicator` se mantiene, pero se envuelve
-          return RefreshIndicator(
-            onRefresh: () async {
-              context.read<ReminderBloc>().add(SyncWithFirebase());
-              await Future.delayed(const Duration(seconds: 1));
-            },
-            child: SingleChildScrollView(
+          return SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(24), // Mayor padding general
               child: Column(
@@ -299,8 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildTipsCard(),
                 ],
               ),
-            ),
-          );
+            );
         },
       ),
     );
@@ -483,5 +468,60 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  void _showSubtleSuccessIndicator() {
+    // Mostrar indicador sutil de éxito en la esquina superior derecha
+    OverlayEntry? overlayEntry;
+    
+    overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: 100,
+        right: 20,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.green[600],
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                SizedBox(width: 8),
+                Text(
+                  'Listo',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(overlayEntry);
+
+    // Remover después de 1.5 segundos
+    Timer(const Duration(milliseconds: 1500), () {
+      overlayEntry?.remove();
+    });
   }
 }
