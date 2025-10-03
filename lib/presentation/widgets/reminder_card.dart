@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../domain/entities/reminder.dart';
+import '../../theme/app_styles.dart';
 
 class ReminderCard extends StatelessWidget {
   final Reminder reminder;
   final VoidCallback? onComplete;
-  final VoidCallback? onPostpone; // Se mantiene pero no se usa en el card
+  final VoidCallback? onPostpone;
   final VoidCallback? onSkip;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -23,38 +24,32 @@ class ReminderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: kDefaultElevation,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(kLargeBorderRadius),
+      ),
       child: InkWell(
         onTap: onEdit,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(kLargeBorderRadius),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(kDefaultPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              /// --- Cabecera con título y estado ---
               Row(
                 children: [
                   _buildStatusIcon(),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: kSmallPadding),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          reminder.title,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2C3E50),
-                          ),
-                        ),
+                        Text(reminder.title, style: kSubtitleTextStyle),
                         const SizedBox(height: 4),
                         Text(
                           _getFrequencyText(),
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
+                          style: kCaptionTextStyle.copyWith(
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -64,48 +59,39 @@ class ReminderCard extends StatelessWidget {
                   _buildStatusBadge(),
                 ],
               ),
-              const SizedBox(height: 12),
+
+              const SizedBox(height: kDefaultPadding),
+
+              /// --- Descripción ---
               Text(
                 reminder.description,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[700],
-                  height: 1.4,
-                ),
+                style: kBodyTextStyle.copyWith(height: 1.4),
               ),
-              const SizedBox(height: 12),
+
+              const SizedBox(height: kDefaultPadding),
+
+              /// --- Fecha y hora ---
               Row(
                 children: [
-                  Icon(
-                    Icons.access_time,
-                    size: 18,
-                    color: Colors.grey[600],
-                  ),
-                  const SizedBox(width: 6),
+                  const Icon(Icons.access_time, size: kSmallIconSize, color: kContrastColor),
+                  const SizedBox(width: kSmallPadding),
                   Text(
                     DateFormat('dd/MM/yyyy HH:mm').format(reminder.dateTime),
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: kCaptionTextStyle.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
+
+              /// --- Aplazado ---
               if (reminder.postponedUntil != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: kSmallPadding),
                 Row(
                   children: [
-                    Icon(
-                      Icons.snooze,
-                      size: 18,
-                      color: Colors.orange[700],
-                    ),
-                    const SizedBox(width: 6),
+                    const Icon(Icons.snooze, size: kSmallIconSize, color: Colors.orange),
+                    const SizedBox(width: kSmallPadding),
                     Text(
                       'Aplazado hasta: ${DateFormat('HH:mm').format(reminder.postponedUntil!)}',
-                      style: TextStyle(
-                        fontSize: 14,
+                      style: kCaptionTextStyle.copyWith(
                         color: Colors.orange[700],
                         fontWeight: FontWeight.w600,
                       ),
@@ -113,63 +99,42 @@ class ReminderCard extends StatelessWidget {
                   ],
                 ),
               ],
+
+              /// --- Botones según estado ---
               if (reminder.status == ReminderStatus.pending) ...[
-                const SizedBox(height: 16),
+                const SizedBox(height: kLargePadding),
                 Row(
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: onComplete,
-                        icon: const Icon(Icons.check_circle, size: 20),
-                        label: const Text(
-                          'Completar',
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold),
+                        style: kPrimaryButtonStyle.copyWith(
+                          backgroundColor: WidgetStateProperty.all(kSuccessColor),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF27AE60),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                        icon: const Icon(Icons.check_circle, size: kSmallIconSize),
+                        label: const Text('Completar', style: kButtonTextStyle),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: kSmallPadding),
                     ElevatedButton(
                       onPressed: onSkip,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[400],
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                      style: kPrimaryButtonStyle.copyWith(
+                        backgroundColor: WidgetStateProperty.all(Colors.grey),
                       ),
-                      child: const Icon(Icons.close, size: 20),
+                      child: const Icon(Icons.close, size: kSmallIconSize, color: kWhiteColor),
                     ),
                   ],
                 ),
-              ],
-              if (reminder.status != ReminderStatus.pending) ...[
-                const SizedBox(height: 12),
+              ] else ...[
+                const SizedBox(height: kSmallPadding),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton.icon(
                       onPressed: onDelete,
-                      icon: const Icon(Icons.delete, size: 20),
-                      label: const Text(
-                        'Eliminar',
-                        style: TextStyle(fontSize: 15),
-                      ),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.red,
-                      ),
+                      icon: const Icon(Icons.delete, size: kSmallIconSize),
+                      label: const Text('Eliminar', style: kBodyTextStyle),
+                      style: TextButton.styleFrom(foregroundColor: kErrorColor),
                     ),
                   ],
                 ),
@@ -181,6 +146,7 @@ class ReminderCard extends StatelessWidget {
     );
   }
 
+  /// --- Icono de estado ---
   Widget _buildStatusIcon() {
     IconData icon;
     Color color;
@@ -188,11 +154,11 @@ class ReminderCard extends StatelessWidget {
     switch (reminder.status) {
       case ReminderStatus.pending:
         icon = Icons.schedule;
-        color = const Color(0xFF3498DB);
+        color = Colors.blue;
         break;
       case ReminderStatus.completed:
         icon = Icons.check_circle;
-        color = const Color(0xFF27AE60);
+        color = kSuccessColor;
         break;
       case ReminderStatus.skipped:
         icon = Icons.cancel;
@@ -200,20 +166,21 @@ class ReminderCard extends StatelessWidget {
         break;
       case ReminderStatus.postponed:
         icon = Icons.snooze;
-        color = const Color(0xFFF39C12);
+        color = Colors.orange;
         break;
     }
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(kSmallPadding),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(kDefaultBorderRadius),
       ),
-      child: Icon(icon, color: color, size: 28),
+      child: Icon(icon, color: color, size: kMediumIconSize),
     );
   }
 
+  /// --- Badge de estado ---
   Widget _buildStatusBadge() {
     String text;
     Color color;
@@ -221,11 +188,11 @@ class ReminderCard extends StatelessWidget {
     switch (reminder.status) {
       case ReminderStatus.pending:
         text = 'Pendiente';
-        color = const Color(0xFF3498DB);
+        color = Colors.blue;
         break;
       case ReminderStatus.completed:
         text = 'Completado';
-        color = const Color(0xFF27AE60);
+        color = kSuccessColor;
         break;
       case ReminderStatus.skipped:
         text = 'Omitido';
@@ -233,22 +200,21 @@ class ReminderCard extends StatelessWidget {
         break;
       case ReminderStatus.postponed:
         text = 'Aplazado';
-        color = const Color(0xFFF39C12);
+        color = Colors.orange;
         break;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: kSmallPadding, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(kLargeBorderRadius),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
         text,
-        style: TextStyle(
+        style: kCaptionTextStyle.copyWith(
           color: color,
-          fontSize: 13,
           fontWeight: FontWeight.bold,
         ),
       ),

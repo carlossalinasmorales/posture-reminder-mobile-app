@@ -5,13 +5,7 @@ import '../../domain/entities/reminder.dart';
 import '../bloc/reminder_bloc.dart';
 import '../widgets/reminder_card.dart';
 import 'create_reminder_screen.dart';
-
-// Constantes de diseño para accesibilidad
-const double _largeFontSize = 24.0;
-const double _mediumFontSize = 20.0;
-const double _iconSize = 32.0;
-const Color _primaryColor = Color(0xFF007AFF); // Azul fuerte
-const Color _contrastColor = Color(0xFF2C3E50); // Gris oscuro para texto
+import '../../theme/app_styles.dart';
 
 class MyRemindersScreen extends StatefulWidget {
   const MyRemindersScreen({super.key});
@@ -21,17 +15,13 @@ class MyRemindersScreen extends StatefulWidget {
 }
 
 class _MyRemindersScreenState extends State<MyRemindersScreen> {
-  // El filtro ahora se representa como una cadena para el Dropdown
   String? _currentFilterLabel;
-  
-  // Variables para funcionalidad de deshacer
   Reminder? _deletedReminder;
   Timer? _undoTimer;
 
   @override
   void initState() {
     super.initState();
-    // Inicializar el estado de filtro al cargar todos los recordatorios
     _currentFilterLabel = 'Todos';
     context.read<ReminderBloc>().add(LoadReminders());
   }
@@ -42,7 +32,6 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
     super.dispose();
   }
 
-  // Mapeo simple de etiquetas a estados
   ReminderStatus? _getFilterStatus(String label) {
     switch (label) {
       case 'Pendientes':
@@ -53,7 +42,6 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
         return ReminderStatus.skipped;
       case 'Aplazados':
         return ReminderStatus.postponed;
-      case 'Todos':
       default:
         return null;
     }
@@ -62,26 +50,16 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: kWhiteColor,
       appBar: AppBar(
-        elevation: 2,
-        backgroundColor: Colors.white,
+        elevation: kDefaultElevation,
+        backgroundColor: kWhiteColor,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back,
-              color: _contrastColor, size: _iconSize),
+              color: kContrastColor, size: kLargeIconSize),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Mis Recordatorios',
-          style: TextStyle(
-            color: _contrastColor,
-            fontSize: 26.0,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        actions: [
-          const SizedBox(width: 12),
-        ],
+        title: const Text('Mis Recordatorios', style: kTitleTextStyle),
       ),
       body: BlocConsumer<ReminderBloc, ReminderState>(
         listener: (context, state) {
@@ -89,17 +67,16 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  state.message.contains('sincronizar') 
-                    ? 'Error de sincronización'
-                    : 'Error inesperado',
-                  style: const TextStyle(fontSize: 16),
+                  state.message.contains('sincronizar')
+                      ? 'Error de sincronización'
+                      : 'Error inesperado',
+                  style: kBodyTextStyle,
                 ),
-                backgroundColor: Colors.red[700],
+                backgroundColor: kErrorColor,
                 duration: const Duration(seconds: 3),
               ),
             );
           } else if (state is ReminderOperationSuccess) {
-            // Mostrar indicador sutil de éxito
             _showSubtleSuccessIndicator();
             context.read<ReminderBloc>().add(LoadReminders());
           }
@@ -109,87 +86,80 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
             return const Center(
               child: CircularProgressIndicator(
                 strokeWidth: 4,
-                color: _primaryColor,
+                color: kPrimaryColor,
               ),
             );
           }
 
           if (state is ReminderLoaded) {
             return CustomScrollView(
-                slivers: [
-                  // Filtros (Ahora un Dropdown visible y estático)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16.0, horizontal: 20.0),
-                      child: _buildFilterDropdown(), // Usamos el nuevo widget
-                    ),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: kDefaultPadding, horizontal: kLargePadding),
+                    child: _buildFilterDropdown(),
                   ),
-
-                  // Lista de recordatorios
-                  if (state.filteredReminders.isEmpty)
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: _buildEmptyState(),
-                    )
-                  else
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final reminder = state.filteredReminders[index];
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: ReminderCard(
-                                reminder: reminder,
-                                onComplete: () => context
-                                    .read<ReminderBloc>()
-                                    .add(CompleteReminder(reminder.id)),
-                                onPostpone: null,
-                                onSkip: () => context
-                                    .read<ReminderBloc>()
-                                    .add(SkipReminder(reminder.id)),
-                                onEdit: () => _navigateToEdit(reminder),
-                                onDelete: () => _showDeleteDialog(reminder.id),
-                              ),
-                            );
-                          },
-                          childCount: state.filteredReminders.length,
-                        ),
+                ),
+                if (state.filteredReminders.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _buildEmptyState(),
+                  )
+                else
+                  SliverPadding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: kLargePadding),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final reminder = state.filteredReminders[index];
+                          return Padding(
+                            padding:
+                                const EdgeInsets.only(bottom: kDefaultPadding),
+                            child: ReminderCard(
+                              reminder: reminder,
+                              onComplete: () => context
+                                  .read<ReminderBloc>()
+                                  .add(CompleteReminder(reminder.id)),
+                              onSkip: () => context
+                                  .read<ReminderBloc>()
+                                  .add(SkipReminder(reminder.id)),
+                              onEdit: () => _navigateToEdit(reminder),
+                              onDelete: () => _showDeleteDialog(reminder.id),
+                            ),
+                          );
+                        },
+                        childCount: state.filteredReminders.length,
                       ),
                     ),
-
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: 100),
                   ),
-                ],
-              );
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 100),
+                ),
+              ],
+            );
           }
 
           return _buildEmptyState();
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _navigateToCreate(),
-        backgroundColor: _primaryColor,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add, size: 30),
+        onPressed: _navigateToCreate,
+        backgroundColor: kPrimaryColor,
+        foregroundColor: kWhiteColor,
+        icon: const Icon(Icons.add, size: kLargeIconSize),
         label: const Text(
           'Nuevo Recordatorio',
-          style:
-              TextStyle(fontSize: _mediumFontSize, fontWeight: FontWeight.bold),
+          style: kButtonTextStyle
         ),
-        elevation: 6,
+        elevation: kHighElevation,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
-  // --- Widgets Auxiliares Mejorados ---
-
   Widget _buildFilterDropdown() {
-    // Las opciones son explícitas y no requieren deslizamiento
     const List<String> filterLabels = [
       'Todos',
       'Pendientes',
@@ -201,41 +171,27 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Filtrar por estado:',
-          style: TextStyle(
-            fontSize: 18.0,
-            fontWeight: FontWeight.bold,
-            color: _contrastColor,
-          ),
-        ),
-        const SizedBox(height: 8),
+        const Text('Filtrar por estado:', style: kSubtitleTextStyle),
+        const SizedBox(height: kSmallPadding),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          padding: const EdgeInsets.symmetric(
+              horizontal: kSmallPadding, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-                color: _primaryColor, width: 2), // Borde claro y grueso
+            color: kBackgroundColor,
+            borderRadius: BorderRadius.circular(kDefaultBorderRadius),
+            border: Border.all(color: kPrimaryColor, width: 2),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               isExpanded: true,
               value: _currentFilterLabel,
-              icon:
-                  const Icon(Icons.filter_list, size: 30, color: _primaryColor),
-              style: const TextStyle(
-                fontSize: _mediumFontSize, // Texto grande
-                color: _contrastColor,
-              ),
-              dropdownColor: Colors.white,
-              elevation: 4,
+              icon: const Icon(Icons.filter_list,
+                  size: kLargeIconSize, color: kPrimaryColor),
+              style: kBodyTextStyle.copyWith(fontSize: kMediumFontSize),
+              dropdownColor: kWhiteColor,
               onChanged: (String? newValue) {
                 if (newValue != null) {
-                  setState(() {
-                    _currentFilterLabel = newValue;
-                  });
-                  // Notificar al BLoC para aplicar el filtro
+                  setState(() => _currentFilterLabel = newValue);
                   context
                       .read<ReminderBloc>()
                       .add(FilterReminders(_getFilterStatus(newValue)));
@@ -248,14 +204,14 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 4.0),
                     child: Text(
                       value,
-                      style: TextStyle(
-                        fontSize: _mediumFontSize,
+                      style: kBodyTextStyle.copyWith(
+                        fontSize: kMediumFontSize,
                         fontWeight: _currentFilterLabel == value
                             ? FontWeight.bold
                             : FontWeight.normal,
                         color: _currentFilterLabel == value
-                            ? _primaryColor
-                            : _contrastColor,
+                            ? kPrimaryColor
+                            : kContrastColor,
                       ),
                     ),
                   ),
@@ -271,34 +227,24 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(40.0),
+        padding: const EdgeInsets.all(kExtraLargePadding),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.notifications_none,
-              size: 120,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 30),
+            Icon(Icons.notifications_none,
+                size: 120, color: Colors.grey[400]),
+            const SizedBox(height: kLargePadding),
             Text(
               _currentFilterLabel == 'Todos'
                   ? '¡No hay recordatorios!'
                   : 'No hay recordatorios ${_currentFilterLabel?.toLowerCase()}',
-              style: const TextStyle(
-                fontSize: _largeFontSize,
-                color: _contrastColor,
-                fontWeight: FontWeight.bold,
-              ),
+              style: kTitleTextStyle,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 15),
-            const Text(
-              'Toca el botón azul "Nuevo Recordatorio" para comenzar.',
-              style: TextStyle(
-                fontSize: 18.0,
-                color: Color(0xFF6C7A89),
-              ),
+            const SizedBox(height: kSmallPadding),
+            Text(
+              'Toca el botón "Nuevo Recordatorio" para comenzar.',
+              style: kBodyTextStyle.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
           ],
@@ -311,9 +257,7 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const CreateReminderScreen()),
-    ).then((_) {
-      context.read<ReminderBloc>().add(LoadReminders());
-    });
+    ).then((_) => context.read<ReminderBloc>().add(LoadReminders()));
   }
 
   void _navigateToEdit(Reminder reminder) {
@@ -322,15 +266,12 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
       MaterialPageRoute(
         builder: (context) => CreateReminderScreen(reminder: reminder),
       ),
-    ).then((_) {
-      context.read<ReminderBloc>().add(LoadReminders());
-    });
+    ).then((_) => context.read<ReminderBloc>().add(LoadReminders()));
   }
 
   void _showSubtleSuccessIndicator() {
-    // Mostrar indicador sutil de éxito en la esquina superior derecha
     OverlayEntry? overlayEntry;
-    
+
     overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
         top: 100,
@@ -338,10 +279,11 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
         child: Material(
           color: Colors.transparent,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+                horizontal: kDefaultPadding, vertical: kSmallPadding),
             decoration: BoxDecoration(
-              color: Colors.green[600],
-              borderRadius: BorderRadius.circular(20),
+              color: kSuccessColor,
+              borderRadius: BorderRadius.circular(kLargeBorderRadius),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
@@ -353,20 +295,14 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.check_circle,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'Listo',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                Icon(Icons.check_circle, color: kWhiteColor, size: kSmallIconSize),
+                SizedBox(width: kSmallPadding),
+                Text('Listo',
+                    style: TextStyle(
+                      color: kWhiteColor,
+                      fontSize: kExtraSmallFontSize,
+                      fontWeight: FontWeight.w600,
+                    )),
               ],
             ),
           ),
@@ -375,41 +311,33 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
     );
 
     Overlay.of(context).insert(overlayEntry);
-
-    // Remover después de 1.5 segundos
-    Timer(const Duration(milliseconds: 1500), () {
-      overlayEntry?.remove();
-    });
+    Timer(const Duration(milliseconds: 1500), () => overlayEntry?.remove());
   }
 
   void _showDeleteDialog(String id) {
-    // Obtener el recordatorio antes de eliminarlo
     final currentState = context.read<ReminderBloc>().state;
     if (currentState is! ReminderLoaded) return;
-    
+
     _deletedReminder = currentState.reminders.firstWhere(
       (r) => r.id == id,
       orElse: () => throw Exception('Recordatorio no encontrado'),
     );
 
-    // Eliminar el recordatorio
     context.read<ReminderBloc>().add(DeleteReminder(id));
 
-    // Mostrar opción de deshacer
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${_deletedReminder!.title} eliminado'),
-        backgroundColor: Colors.grey[800],
+        backgroundColor: kContrastColor,
         duration: const Duration(seconds: 4),
         action: SnackBarAction(
           label: 'DESHACER',
-          textColor: Colors.white,
+          textColor: kWhiteColor,
           onPressed: _undoDeletion,
         ),
       ),
     );
 
-    // Programar eliminación definitiva después de 5 segundos
     _undoTimer?.cancel();
     _undoTimer = Timer(const Duration(seconds: 5), () {
       _deletedReminder = null;
@@ -419,25 +347,22 @@ class _MyRemindersScreenState extends State<MyRemindersScreen> {
   void _undoDeletion() {
     if (_deletedReminder == null) return;
 
-    // Restaurar el recordatorio
     context.read<ReminderBloc>().add(CreateReminder(
-      title: _deletedReminder!.title,
-      description: _deletedReminder!.description,
-      dateTime: _deletedReminder!.dateTime,
-      frequency: _deletedReminder!.frequency,
-      customDays: _deletedReminder!.customDays,
-      customInterval: _deletedReminder!.customInterval,
-    ));
+          title: _deletedReminder!.title,
+          description: _deletedReminder!.description,
+          dateTime: _deletedReminder!.dateTime,
+          frequency: _deletedReminder!.frequency,
+          customDays: _deletedReminder!.customDays,
+          customInterval: _deletedReminder!.customInterval,
+        ));
 
-    // Limpiar variables
     _deletedReminder = null;
     _undoTimer?.cancel();
 
-    // Mostrar confirmación
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Recordatorio restaurado'),
-        backgroundColor: Colors.green,
+        backgroundColor: kSuccessColor,
         duration: Duration(seconds: 2),
       ),
     );

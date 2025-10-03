@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_screen.dart';
+import '../../theme/app_styles.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -35,25 +36,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       if (_isLogin) {
-        // Login
         await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
       } else {
-        // Registro
         final credential =
             await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
-
-        // Actualizar nombre
         await credential.user?.updateDisplayName(_nameController.text.trim());
       }
     } on FirebaseAuthException catch (e) {
       String message = 'Error de autenticación';
-
       switch (e.code) {
         case 'user-not-found':
           message = 'Usuario no encontrado';
@@ -75,28 +71,22 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(message, style: const TextStyle(fontSize: 16)),
-            backgroundColor: Colors.red,
+            content: Text(message, style: kBodyTextStyle),
+            backgroundColor: kErrorColor,
             duration: const Duration(seconds: 4),
           ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _continueAsGuest() async {
     setState(() => _isLoading = true);
-
     try {
-      // Usar SharedPreferences para marcar modo invitado
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('guest_mode', true);
-
-      // Navegar al HomeScreen directamente sin Firebase
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const HomeScreen()),
@@ -107,37 +97,34 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Error al continuar como invitado'),
-            backgroundColor: Colors.red,
+            backgroundColor: kErrorColor,
             duration: Duration(seconds: 3),
           ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: kBackgroundColor,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(kLargePadding),
             child: Form(
               key: _formKey,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo/Icono
+                  /// Logo
                   Container(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(kLargePadding),
                     decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 164, 112, 223)
-                          .withOpacity(0.2),
+                      color: kPrimaryColor.withOpacity(0.2),
                       shape: BoxShape.circle,
                     ),
                     child: Image.asset(
@@ -147,68 +134,53 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: kExtraLargePadding),
 
-                  // Título
+                  /// Título
                   Text(
                     _isLogin ? '¡Hola!' : 'Crear Cuenta',
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 164, 112, 223),
-                    ),
+                    style: kTitleTextStyle.copyWith(color: kPrimaryColor),
                   ),
 
-                  const SizedBox(height: 8),
+                  const SizedBox(height: kSmallPadding),
 
                   Text(
                     _isLogin
                         ? 'Inicia sesión para continuar'
                         : 'Regístrate para comenzar',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
+                    style: kBodyTextStyle.copyWith(color: Colors.grey[600]),
                   ),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: kExtraLargePadding),
 
-                  // Campo Nombre (solo registro)
+                  /// Nombre (solo registro)
                   if (!_isLogin) ...[
                     _buildTextField(
                       controller: _nameController,
                       label: 'Nombre',
                       icon: Icons.person,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa tu nombre';
-                        }
-                        return null;
-                      },
+                      validator: (value) =>
+                          value == null || value.isEmpty ? 'Por favor ingresa tu nombre' : null,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: kDefaultPadding),
                   ],
 
-                  // Campo Email
+                  /// Email
                   _buildTextField(
                     controller: _emailController,
                     label: 'Correo Electrónico',
                     icon: Icons.email,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tu correo';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Ingresa un correo válido';
-                      }
+                      if (value == null || value.isEmpty) return 'Por favor ingresa tu correo';
+                      if (!value.contains('@')) return 'Ingresa un correo válido';
                       return null;
                     },
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: kDefaultPadding),
 
-                  // Campo Contraseña
+                  /// Contraseña
                   _buildTextField(
                     controller: _passwordController,
                     label: 'Contraseña',
@@ -216,53 +188,40 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: _obscurePassword,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                        color: const Color.fromARGB(255, 164, 112, 223),
+                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        color: kPrimaryColor,
                       ),
-                      onPressed: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
+                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tu contraseña';
-                      }
-                      if (value.length < 6) {
-                        return 'La contraseña debe tener al menos 6 caracteres';
-                      }
+                      if (value == null || value.isEmpty) return 'Por favor ingresa tu contraseña';
+                      if (value.length < 6) return 'Debe tener al menos 6 caracteres';
                       return null;
                     },
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: kExtraLargePadding),
 
-                  // Botón Principal con Degradado
+                  /// Botón Principal con degradado
                   SizedBox(
                     width: double.infinity,
                     child: Container(
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            Color.fromARGB(255, 164, 112, 223), // morado fuerte
-                            Color.fromARGB(
-                                131, 219, 186, 115), // morado más oscuro
-                          ],
+                        gradient: LinearGradient(
+                          colors: [kPrimaryColor, kPrimaryColor.withOpacity(0.7)],
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(kDefaultBorderRadius),
                       ),
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _submit,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent, // transparente
-                          shadowColor:
-                              Colors.transparent, // sin sombra de fondo
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(vertical: kDefaultPadding),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(kDefaultBorderRadius),
                           ),
                         ),
                         child: _isLoading
@@ -270,96 +229,74 @@ class _LoginScreenState extends State<LoginScreen> {
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
-                                  color: Colors.white,
+                                  color: kWhiteColor,
                                   strokeWidth: 2,
                                 ),
                               )
                             : Text(
                                 _isLogin ? 'Iniciar Sesión' : 'Registrarse',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
+                                style: kButtonTextStyle,
                               ),
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: kDefaultPadding),
 
-                  // Cambiar entre Login/Registro
+                  /// Toggle login/registro
                   TextButton(
-                    onPressed: () {
-                      setState(() => _isLogin = !_isLogin);
-                    },
+                    onPressed: () => setState(() => _isLogin = !_isLogin),
                     child: Text(
                       _isLogin
                           ? '¿No tienes cuenta? Regístrate'
                           : '¿Ya tienes cuenta? Inicia sesión',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Color.fromARGB(255, 164, 112, 223),
+                      style: kBodyTextStyle.copyWith(
+                        fontSize: kSmallFontSize,
                         fontWeight: FontWeight.w600,
+                        color: kPrimaryColor,
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: kLargePadding),
 
-                  // Divisor
+                  /// Divisor
                   Row(
                     children: [
                       Expanded(child: Divider(color: Colors.grey[400])),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'O',
-                          style:
-                              TextStyle(color: Colors.grey[600], fontSize: 16),
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: kSmallPadding),
+                        child: Text('O', style: kBodyTextStyle.copyWith(color: Colors.grey[600])),
                       ),
                       Expanded(child: Divider(color: Colors.grey[400])),
                     ],
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: kLargePadding),
 
-                  // Botón de Continuar como Invitado
+                  /// Continuar como invitado
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: _isLoading ? null : _continueAsGuest,
-                      icon: const Icon(Icons.person_outline, size: 24),
-                      label: const Text(
-                        'Continuar como Invitado',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      icon: const Icon(Icons.person_outline, size: kMediumIconSize),
+                      label: Text('Continuar como Invitado', style: kButtonTextStyle.copyWith(color: kContrastColor)),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.grey[700],
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: kDefaultPadding),
                         side: BorderSide(color: Colors.grey[400]!, width: 2),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(kDefaultBorderRadius),
                         ),
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: kDefaultPadding),
 
-                  // Nota sobre modo invitado
                   Text(
                     'Nota: Como invitado, tus datos solo se guardarán en este dispositivo',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      fontStyle: FontStyle.italic,
-                    ),
+                    style: kCaptionTextStyle.copyWith(color: Colors.grey[600], fontStyle: FontStyle.italic),
                   ),
                 ],
               ),
@@ -383,29 +320,11 @@ class _LoginScreenState extends State<LoginScreen> {
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscureText,
-      style: const TextStyle(fontSize: 16),
-      decoration: InputDecoration(
+      style: kBodyTextStyle,
+      decoration: kTextFieldDecoration.copyWith(
         labelText: label,
-        labelStyle: const TextStyle(fontSize: 16),
-        prefixIcon: Icon(icon, color: const Color.fromARGB(255, 164, 112, 223)),
+        prefixIcon: Icon(icon, color: kPrimaryColor),
         suffixIcon: suffixIcon,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-              color: Color.fromARGB(255, 164, 112, 223), width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
       validator: validator,
     );
