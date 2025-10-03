@@ -15,7 +15,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
-  
+
   bool _isLogin = true;
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -42,17 +42,18 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else {
         // Registro
-        final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        final credential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
-        
+
         // Actualizar nombre
         await credential.user?.updateDisplayName(_nameController.text.trim());
       }
     } on FirebaseAuthException catch (e) {
       String message = 'Error de autenticación';
-      
+
       switch (e.code) {
         case 'user-not-found':
           message = 'Usuario no encontrado';
@@ -70,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
           message = 'Correo electrónico inválido';
           break;
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -88,12 +89,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _continueAsGuest() async {
     setState(() => _isLoading = true);
-    
+
     try {
       // Usar SharedPreferences para marcar modo invitado
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('guest_mode', true);
-      
+
       // Navegar al HomeScreen directamente sin Firebase
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -133,32 +134,33 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF3498DB).withOpacity(0.1),
+                      color: const Color.fromARGB(255, 164, 112, 223)
+                          .withOpacity(0.2),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
-                      Icons.self_improvement,
-                      size: 80,
-                      color: Color(0xFF3498DB),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      width: 80,
+                      height: 80,
                     ),
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Título
                   Text(
-                    _isLogin ? '¡Bienvenido!' : 'Crear Cuenta',
+                    _isLogin ? '¡Hola!' : 'Crear Cuenta',
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
+                      color: Color.fromARGB(255, 164, 112, 223),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   Text(
-                    _isLogin 
+                    _isLogin
                         ? 'Inicia sesión para continuar'
                         : 'Regístrate para comenzar',
                     style: TextStyle(
@@ -166,9 +168,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: Colors.grey[600],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 40),
-                  
+
                   // Campo Nombre (solo registro)
                   if (!_isLogin) ...[
                     _buildTextField(
@@ -184,7 +186,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                   ],
-                  
+
                   // Campo Email
                   _buildTextField(
                     controller: _emailController,
@@ -201,9 +203,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       return null;
                     },
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Campo Contraseña
                   _buildTextField(
                     controller: _passwordController,
@@ -212,8 +214,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: _obscurePassword,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                        color: const Color(0xFF3498DB),
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        color: const Color.fromARGB(255, 164, 112, 223),
                       ),
                       onPressed: () {
                         setState(() => _obscurePassword = !_obscurePassword);
@@ -229,44 +233,59 @@ class _LoginScreenState extends State<LoginScreen> {
                       return null;
                     },
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
-                  // Botón Principal
+
+                  // Botón Principal con Degradado
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3498DB),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color.fromARGB(255, 164, 112, 223), // morado fuerte
+                            Color.fromARGB(
+                                131, 219, 186, 115), // morado más oscuro
+                          ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
                         ),
-                        elevation: 2,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent, // transparente
+                          shadowColor:
+                              Colors.transparent, // sin sombra de fondo
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                _isLogin ? 'Iniciar Sesión' : 'Registrarse',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
-                            )
-                          : Text(
-                              _isLogin ? 'Iniciar Sesión' : 'Registrarse',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
+                      ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Cambiar entre Login/Registro
                   TextButton(
                     onPressed: () {
@@ -278,14 +297,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           : '¿Ya tienes cuenta? Inicia sesión',
                       style: const TextStyle(
                         fontSize: 16,
-                        color: Color(0xFF3498DB),
+                        color: Color.fromARGB(255, 164, 112, 223),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Divisor
                   Row(
                     children: [
@@ -294,15 +313,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           'O',
-                          style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                          style:
+                              TextStyle(color: Colors.grey[600], fontSize: 16),
                         ),
                       ),
                       Expanded(child: Divider(color: Colors.grey[400])),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Botón de Continuar como Invitado
                   SizedBox(
                     width: double.infinity,
@@ -326,9 +346,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Nota sobre modo invitado
                   Text(
                     'Nota: Como invitado, tus datos solo se guardarán en este dispositivo',
@@ -365,7 +385,7 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(fontSize: 16),
-        prefixIcon: Icon(icon, color: const Color(0xFF3498DB)),
+        prefixIcon: Icon(icon, color: const Color.fromARGB(255, 164, 112, 223)),
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -377,11 +397,13 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF3498DB), width: 2),
+          borderSide: const BorderSide(
+              color: Color.fromARGB(255, 164, 112, 223), width: 2),
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
       validator: validator,
     );

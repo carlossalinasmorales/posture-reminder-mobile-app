@@ -16,6 +16,8 @@ dependencies:
   cupertino_icons: ^1.0.6
   google_fonts: ^6.1.0
   intl: any
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.0
   
   # State Management
   flutter_bloc: ^9.1.1
@@ -56,3 +58,19 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/icon.png"
+
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/icons/splash_icon.png
+  android: true
+  ios: true
+
+  android_12:
+    image: assets/icons/splash_icon.png
+    
+  web: false
