@@ -427,31 +427,93 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
                         style: TextStyle(color: kWhiteColor),
                       ),
                     ),
-                    CupertinoButton(
-                      onPressed: () {
-                        setState(() {
-                          _selectedDateTime = DateTime(
-                            _selectedDateTime.year,
-                            _selectedDateTime.month,
-                            _selectedDateTime.day,
-                            selectedTime.hour,
-                            selectedTime.minute,
-                          );
-                        });
-                        if (_isEditing) _onFieldChanged('');
-                        Navigator.pop(context);
-                      },
-                      child: const Text(
-                        'Confirmar',
-                        style: TextStyle(
-                          color: kWhiteColor,
-                          fontWeight: FontWeight.bold,
+                    Container(
+                      decoration: BoxDecoration(
+                        color: kWhiteColor,
+                        borderRadius: BorderRadius.circular(kDefaultBorderRadius),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedDateTime = DateTime(
+                              _selectedDateTime.year,
+                              _selectedDateTime.month,
+                              _selectedDateTime.day,
+                              selectedTime.hour,
+                              selectedTime.minute,
+                            );
+                          });
+                          if (_isEditing) _onFieldChanged('');
+                          Navigator.pop(context);
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: kDefaultPadding,
+                            vertical: kSmallPadding,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(kDefaultBorderRadius),
+                          ),
+                        ),
+                        child: Text(
+                          'Confirmar',
+                          style: kBodyTextStyle.copyWith(
+                            color: kPrimaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
+              
+              // Indicador de hora en tiempo real
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: kDefaultPadding),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: kDefaultPadding,
+                        vertical: kSmallPadding,
+                      ),
+                      decoration: BoxDecoration(
+                        color: kPrimaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(kDefaultBorderRadius),
+                        border: Border.all(color: kPrimaryColor.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            color: kPrimaryColor,
+                            size: kMediumIconSize,
+                          ),
+                          const SizedBox(width: kSmallPadding),
+                          Text(
+                            'Hora: ${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
+                            style: kBodyTextStyle.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: kPrimaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
               Expanded(
                 child: CupertinoDatePicker(
                   mode: CupertinoDatePickerMode.time,
@@ -459,6 +521,8 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
                   use24hFormat: true,
                   onDateTimeChanged: (DateTime newTime) {
                     selectedTime = TimeOfDay.fromDateTime(newTime);
+                    // Forzar rebuild del indicador
+                    (context as Element).markNeedsBuild();
                   },
                 ),
               ),
