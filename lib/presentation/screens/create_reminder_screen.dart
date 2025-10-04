@@ -189,7 +189,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _selectDate,
-                    icon: const Icon(Icons.calendar_today),
+                    icon: const Icon(Icons.calendar_today, color: kPrimaryColor),
                     label: Text(
                       DateFormat('dd/MM/yyyy', 'es').format(_selectedDateTime),
                       style: kCaptionTextStyle,
@@ -200,7 +200,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _selectTime,
-                    icon: const Icon(Icons.schedule),
+                    icon: const Icon(Icons.schedule, color: kPrimaryColor),
                     label: Text(
                       DateFormat('HH:mm').format(_selectedDateTime),
                       style: kCaptionTextStyle,
@@ -255,7 +255,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
         child: Container(
           padding: const EdgeInsets.all(kSmallPadding),
           decoration: BoxDecoration(
-            color: isSelected ? kPrimaryColor.withOpacity(0.1) : Colors.transparent,
+            color: isSelected ? kPrimaryColor.withValues(alpha: 0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(kDefaultBorderRadius),
             border: Border.all(
               color: isSelected ? kPrimaryColor : Colors.grey[300]!,
@@ -404,7 +404,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
     await showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
-        return Container(
+        return SizedBox(
           height: 300,
           child: Column(
             children: [
@@ -433,7 +433,7 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
                         borderRadius: BorderRadius.circular(kDefaultBorderRadius),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -487,9 +487,9 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
                         vertical: kSmallPadding,
                       ),
                       decoration: BoxDecoration(
-                        color: kPrimaryColor.withOpacity(0.1),
+                        color: kPrimaryColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(kDefaultBorderRadius),
-                        border: Border.all(color: kPrimaryColor.withOpacity(0.3)),
+                        border: Border.all(color: kPrimaryColor.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,

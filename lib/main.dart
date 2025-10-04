@@ -12,6 +12,7 @@ import 'presentation/bloc/reminder_bloc.dart';
 import 'presentation/screens/home_screen.dart';
 import 'presentation/screens/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'theme/app_styles.dart';
 
 late ReminderBloc globalReminderBloc;
 
@@ -90,36 +91,33 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF3498DB),
+            seedColor: kPrimaryColor,
             brightness: Brightness.light,
           ),
           fontFamily: 'Roboto',
-          textTheme: const TextTheme(
-            displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-            displayMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            displaySmall: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            headlineMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-            bodyLarge: TextStyle(fontSize: 18),
-            bodyMedium: TextStyle(fontSize: 16),
+          textTheme: TextTheme(
+            displayLarge: kTitleTextStyle.copyWith(fontSize: 32),
+            displayMedium: kTitleTextStyle.copyWith(fontSize: 28),
+            displaySmall: kTitleTextStyle,
+            headlineMedium: kSubtitleTextStyle,
+            bodyLarge: kBodyTextStyle.copyWith(fontSize: 18),
+            bodyMedium: kBodyTextStyle,
+            bodySmall: kCaptionTextStyle,
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              textStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
-            ),
+            style: kPrimaryButtonStyle,
+          ),
+          outlinedButtonTheme: OutlinedButtonThemeData(
+            style: kSecondaryButtonStyle,
           ),
           cardTheme: CardThemeData(
-            elevation: 2,
+            elevation: kDefaultElevation,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(kLargeBorderRadius),
             ),
           ),
+          appBarTheme: kAppBarTheme,
+          snackBarTheme: kSnackBarTheme,
         ),
         home: const AuthWrapper(),
       ),

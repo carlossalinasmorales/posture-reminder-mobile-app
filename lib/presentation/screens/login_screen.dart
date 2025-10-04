@@ -124,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     padding: const EdgeInsets.all(kLargePadding),
                     decoration: BoxDecoration(
-                      color: kPrimaryColor.withOpacity(0.2),
+                      color: kPrimaryColor.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: Image.asset(
@@ -208,7 +208,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [kPrimaryColor, kPrimaryColor.withOpacity(0.7)],
+                          colors: [kPrimaryColor, kPrimaryColor.withValues(alpha: 0.7)],
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
                         ),

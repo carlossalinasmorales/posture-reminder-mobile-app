@@ -94,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Icon(Icons.logout, color: Colors.red),
           SizedBox(width: 12),
-          Text('Cerrar Sesión', style: const TextStyle(fontSize: kSmallFontSize)),
+          Text('Cerrar Sesión', style: TextStyle(fontSize: kSmallFontSize)),
         ],
       ),
     ),
@@ -108,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (isGuest) {
         final confirm = await showDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
+          builder: (dialogContext) => AlertDialog(
             title: const Text(
               '¿Salir como Invitado?',
               style: kSubtitleTextStyle,
@@ -119,16 +119,18 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context, false),
+                onPressed: () => Navigator.pop(dialogContext, false),
                 child: const Text('Cancelar', style: TextStyle(fontSize: 18)),
               ),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context, false);
+                  Navigator.pop(dialogContext, false);
                   // Ir a crear cuenta
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  );
+                  if (context.mounted) {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: kSuccessColor),
                 child: const Text(
@@ -137,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
+                onPressed: () => Navigator.pop(dialogContext, true),
                 style: ElevatedButton.styleFrom(backgroundColor: kErrorColor),
                 child: const Text(
                   'Salir y Borrar',
@@ -152,15 +154,17 @@ class _HomeScreenState extends State<HomeScreen> {
           await prefs.remove('guest_mode');
           // Limpiar datos locales
           await LocalDataSource().clearAllData();
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
-          );
+          if (context.mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+            );
+          }
         }
       } else {
         // Usuario normal con Firebase
         final confirm = await showDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
+          builder: (dialogContext) => AlertDialog(
             title: const Text(
               '¿Cerrar Sesión?',
               style: kSubtitleTextStyle,
@@ -171,11 +175,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context, false),
+                onPressed: () => Navigator.pop(dialogContext, false),
                 child: const Text('Cancelar', style: TextStyle(fontSize: 18)),
               ),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
+                onPressed: () => Navigator.pop(dialogContext, true),
                 style: ElevatedButton.styleFrom(backgroundColor: kErrorColor),
                 child: const Text(
                   'Cerrar Sesión',
@@ -479,7 +483,7 @@ class _HomeScreenState extends State<HomeScreen> {
               borderRadius: BorderRadius.circular(kExtraLargeBorderRadius),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -493,7 +497,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: kWhiteColor,
                   size: kSmallIconSize,
                 ),
-                const SizedBox(width: kSmallPadding),
+                SizedBox(width: kSmallPadding),
                 Text(
                   'Listo',
                   style: TextStyle(
