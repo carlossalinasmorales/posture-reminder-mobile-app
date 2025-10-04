@@ -232,7 +232,7 @@ class NotificationService {
           postponeActionId,
           'Aplazar 2 min',
           showsUserInterface: true,
-          cancelNotification: false,
+          cancelNotification: true,
         ),
       ],
     );

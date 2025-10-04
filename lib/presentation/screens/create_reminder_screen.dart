@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../domain/entities/reminder.dart';
@@ -25,7 +26,6 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
   int? _customInterval;
 
   Timer? _debounceTimer;
-  bool _hasUnsavedChanges = false;
 
   bool get _isEditing => widget.reminder != null;
 
@@ -399,7 +399,74 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
   }
 
   Future<void> _selectTime() async {
-    // ... tu código de time picker, solo cambia colores a kPrimaryColor/kContrastColor
+    TimeOfDay selectedTime = TimeOfDay.fromDateTime(_selectedDateTime);
+    
+    await showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: 300,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(kDefaultPadding),
+                decoration: BoxDecoration(
+                  color: kPrimaryColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(kDefaultBorderRadius),
+                    topRight: Radius.circular(kDefaultBorderRadius),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CupertinoButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(color: kWhiteColor),
+                      ),
+                    ),
+                    CupertinoButton(
+                      onPressed: () {
+                        setState(() {
+                          _selectedDateTime = DateTime(
+                            _selectedDateTime.year,
+                            _selectedDateTime.month,
+                            _selectedDateTime.day,
+                            selectedTime.hour,
+                            selectedTime.minute,
+                          );
+                        });
+                        if (_isEditing) _onFieldChanged('');
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Confirmar',
+                        style: TextStyle(
+                          color: kWhiteColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.time,
+                  initialDateTime: _selectedDateTime,
+                  use24hFormat: true,
+                  onDateTimeChanged: (DateTime newTime) {
+                    selectedTime = TimeOfDay.fromDateTime(newTime);
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _saveReminder() {
@@ -455,7 +522,6 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
 
   void _onFieldChanged(String value) {
     if (!_isEditing) return;
-    setState(() => _hasUnsavedChanges = true);
 
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(seconds: 1), () => _autoSaveReminder());
@@ -479,6 +545,5 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
     );
 
     context.read<ReminderBloc>().add(UpdateReminder(updatedReminder));
-    setState(() => _hasUnsavedChanges = false);
   }
 }

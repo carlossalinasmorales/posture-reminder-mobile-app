@@ -13,7 +13,7 @@ const Color kSuccessColor = Color.fromARGB(255, 54, 156, 57);
 const double kLargeFontSize = 24.0;
 const double kMediumFontSize = 20.0;
 const double kSmallFontSize = 16.0;
-const double kExtraSmallFontSize = 14.0;
+const double kExtraSmallFontSize = 12.0;
 
 // Tamaños de iconos
 const double kLargeIconSize = 32.0;
