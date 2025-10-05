@@ -4,12 +4,15 @@ Una aplicación móvil diseñada especialmente para adultos mayores para ayudarl
 
 ## Características Principales
 
-- 🔔 Recordatorios personalizables de postura
-- 👴 Interfaz simplificada para adultos mayores
-- 💾 Sincronización en la nube con Firebase
-- 🔄 Almacenamiento local
-- 📱 Notificaciones locales
-- 🎨 Diseño de alta legibilidad
+- Recordatorios personalizables de postura
+- Interfaz simplificada para adultos mayores
+- Sincronización en la nube con Firebase
+- Almacenamiento local
+- Notificaciones locales
+- Diseño de alta legibilidad
+
+## Testeos
+- La aplicación está probada solo en android en el emulador Pixel 5.
 
 ## Instalación
 
@@ -76,12 +79,19 @@ lib/
 
 ## Problemas Conocidos
 
+# Error Google API
+
 Existe un error conocido con Google API Manager que muestra el siguiente log:
 ```
 E/GoogleApiManager: Failed to get service from broker.
 E/GoogleApiManager: java.lang.SecurityException: Unknown calling package name 'com.google.android.gms'
 ```
 Este es un [issue conocido de Google](https://issuetracker.google.com/issues/369219148) que está pendiente de solución.
+
+# Problema con notificaciones
+
+No se logró actualizar las remind cards en segundo plano, por ahora la aplicación se abre forzadamente para que la ui se actualice con las acciones de la notificación.
+
 
 ## Checklist Desafio
 
@@ -128,6 +138,13 @@ En este punto me tomé la libertad de diseñar la pagina principal más simple c
 - [✔] Función "Aplazar"
   - [✔] Botón en notificación
   - [✔] Tiempo predeterminado (2 min)
+
+## Posibles mejoras
+
+- Actualizar UI sin abrir aplicación con las notificaciones.
+- Probar aplicación en más tamaños de emuladores Android.
+- Optimizar aplicación para IOS.
+- Recolectar información de usuarios finales (adultos mayores) para mejora continua.
 
 ## Autor
 
