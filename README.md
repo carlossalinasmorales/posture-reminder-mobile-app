@@ -16,7 +16,6 @@ Una aplicación móvil diseñada especialmente para adultos mayores para ayudarl
 - Sincronización en la nube con Firebase
 - Almacenamiento local
 - Notificaciones locales
-- Diseño de alta legibilidad
 
 ## Testeos
 - La aplicación está probada solo en android en el emulador Pixel 5.
@@ -117,10 +116,10 @@ No se logró actualizar las remind cards en segundo plano, por ahora la aplicaci
 
 ## 3. Pantalla Principal (Home -> My Reminders)
 En este punto me tomé la libertad de diseñar la pagina principal más simple con 2 opciones pensada para adultos mayores, debido a que la home con las cards de recordatorios inmediatamente podria verse un poco complicado como primera pantalla.
-- [✔] Lista de recordatorios
-  - [X] Ordenamiento por fecha
+- Lista de recordatorios
+  - [✔] Ordenamiento por fecha
   - [✔] Ordenamiento por estado
-- [✔] Filtros
+- Filtros
   - [✔] Pendientes
   - [✔] Completados
   - [✔] Omitidos
@@ -135,7 +134,7 @@ En este punto me tomé la libertad de diseñar la pagina principal más simple c
   - [✔] Modo invitado
 - Firebase Realtime
   - [✔] Sincronización automática
-- [✔] Función "Aplazar"
+- Función "Aplazar"
   - [✔] Botón en notificación
   - [✔] Tiempo predeterminado (2 min)
 
