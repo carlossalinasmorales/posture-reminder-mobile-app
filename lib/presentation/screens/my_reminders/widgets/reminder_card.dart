@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../domain/entities/reminder.dart';
-import '../../theme/app_styles.dart';
+import '../../../../domain/entities/reminder.dart';
+import '../../../../theme/app_styles.dart';
 
 class ReminderCard extends StatelessWidget {
   final Reminder reminder;
@@ -73,11 +73,13 @@ class ReminderCard extends StatelessWidget {
               /// --- Fecha y hora ---
               Row(
                 children: [
-                  const Icon(Icons.access_time, size: kSmallIconSize, color: kContrastColor),
+                  const Icon(Icons.access_time,
+                      size: kSmallIconSize, color: kContrastColor),
                   const SizedBox(width: kSmallPadding),
                   Text(
                     DateFormat('dd/MM/yyyy HH:mm').format(reminder.dateTime),
-                    style: kCaptionTextStyle.copyWith(fontWeight: FontWeight.w600),
+                    style:
+                        kCaptionTextStyle.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -87,7 +89,8 @@ class ReminderCard extends StatelessWidget {
                 const SizedBox(height: kSmallPadding),
                 Row(
                   children: [
-                    const Icon(Icons.snooze, size: kSmallIconSize, color: Colors.orange),
+                    const Icon(Icons.snooze,
+                        size: kSmallIconSize, color: Colors.orange),
                     const SizedBox(width: kSmallPadding),
                     Text(
                       'Aplazado hasta: ${DateFormat('HH:mm').format(reminder.postponedUntil!)}',
@@ -109,9 +112,11 @@ class ReminderCard extends StatelessWidget {
                       child: ElevatedButton.icon(
                         onPressed: onComplete,
                         style: kPrimaryButtonStyle.copyWith(
-                          backgroundColor: WidgetStateProperty.all(kSuccessColor),
+                          backgroundColor:
+                              WidgetStateProperty.all(kSuccessColor),
                         ),
-                        icon: const Icon(Icons.check_circle, size: kSmallIconSize),
+                        icon: const Icon(Icons.check_circle,
+                            size: kSmallIconSize),
                         label: const Text('Completar', style: kButtonTextStyle),
                       ),
                     ),
@@ -121,7 +126,8 @@ class ReminderCard extends StatelessWidget {
                       style: kPrimaryButtonStyle.copyWith(
                         backgroundColor: WidgetStateProperty.all(Colors.grey),
                       ),
-                      child: const Icon(Icons.close, size: kSmallIconSize, color: kWhiteColor),
+                      child: const Icon(Icons.close,
+                          size: kSmallIconSize, color: kWhiteColor),
                     ),
                   ],
                 ),
@@ -205,7 +211,8 @@ class ReminderCard extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: kSmallPadding, vertical: 6),
+      padding:
+          const EdgeInsets.symmetric(horizontal: kSmallPadding, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(kLargeBorderRadius),
