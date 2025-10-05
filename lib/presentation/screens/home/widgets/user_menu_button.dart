@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../data/datasources/local_datasource.dart';
 import '../../../../theme/app_styles.dart';
-import '../../login/login_screen.dart';
+import '../../../../main.dart';
+import '../../../bloc/reminder_bloc.dart';
 
 class UserMenuButton extends StatelessWidget {
   final VoidCallback onShowSuccessIndicator;
@@ -58,15 +60,22 @@ class UserMenuButton extends StatelessWidget {
     if (v != 'logout') return;
     final prefs = await SharedPreferences.getInstance();
     final guest = prefs.getBool('guest_mode') ?? false;
+    
+    // Limpiar los datos locales para ambos tipos de sesión
+    await LocalDataSource().clearAllData();
+    
+    // Limpiar el bloc para remover recordatorios del estado
+    if (ctx.mounted) {
+      ctx.read<ReminderBloc>().add(LoadReminders());
+    }
+    
     if (guest) {
       await prefs.remove('guest_mode');
-      await LocalDataSource().clearAllData();
     } else {
       await FirebaseAuth.instance.signOut();
     }
-    if (ctx.mounted) {
-      Navigator.pushReplacement(
-          ctx, MaterialPageRoute(builder: (_) => const LoginScreen()));
-    }
+    
+    // Forzar reconstrucción del AuthWrapper para que detecte los cambios
+    authWrapperKey.currentState?.refresh();
   }
 }

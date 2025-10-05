@@ -15,6 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'theme/app_styles.dart';
 
 late ReminderBloc globalReminderBloc;
+final GlobalKey<_AuthWrapperState> authWrapperKey = GlobalKey<_AuthWrapperState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -119,48 +120,64 @@ class MyApp extends StatelessWidget {
           appBarTheme: kAppBarTheme,
           snackBarTheme: kSnackBarTheme,
         ),
-        home: const AuthWrapper(),
+        home: AuthWrapper(key: authWrapperKey),
       ),
     );
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
   @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  
+  void refresh() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+  
+  @override
   Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
-      future: _checkGuestMode(),
-      builder: (context, guestSnapshot) {
-        if (guestSnapshot.connectionState == ConnectionState.waiting) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        // Si está en modo invitado, ir directo al HomeScreen
-        if (guestSnapshot.data == true) {
-          return const HomeScreen();
-        }
-
-        // Si no, verificar autenticación de Firebase
-        return StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+        // Verificar modo invitado de forma síncrona usando FutureBuilder interno
+        return FutureBuilder<bool>(
+          future: _checkGuestMode(),
+          builder: (context, guestSnapshot) {
+            if (guestSnapshot.connectionState == ConnectionState.waiting) {
               return const Scaffold(
                 body: Center(child: CircularProgressIndicator()),
               );
             }
 
+            // Si está en modo invitado, mostrar HomeScreen
+            if (guestSnapshot.data == true) {
+              return const HomeScreen();
+            }
+
+            // Si está autenticado con Firebase, mostrar HomeScreen y sincronizar
             if (snapshot.hasData && snapshot.data != null) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                context.read<ReminderBloc>().add(SyncWithFirebase());
+                if (mounted) {
+                  context.read<ReminderBloc>().add(SyncWithFirebase());
+                }
               });
               return const HomeScreen();
             }
 
+            // Si no hay autenticación, mostrar LoginScreen
             return const LoginScreen();
           },
         );

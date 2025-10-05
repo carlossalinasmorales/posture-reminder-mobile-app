@@ -22,9 +22,9 @@ class FirebaseDataSource {
 
   Future<void> saveReminder(ReminderModel reminder) async {
     await _remindersCollection.doc(reminder.id).set(
-      reminder.toFirestore(),
-      SetOptions(merge: true),
-    );
+          reminder.toFirestore(),
+          SetOptions(merge: true),
+        );
   }
 
   Future<List<ReminderModel>> getAllReminders() async {
@@ -46,10 +46,10 @@ class FirebaseDataSource {
 
   Stream<List<ReminderModel>> remindersStream() {
     return _remindersCollection.snapshots().map(
-      (snapshot) => snapshot.docs
-          .map((doc) => ReminderModel.fromFirestore(doc))
-          .toList(),
-    );
+          (snapshot) => snapshot.docs
+              .map((doc) => ReminderModel.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   Future<void> updateReminderStatus(String id, String status) async {

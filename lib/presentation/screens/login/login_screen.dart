@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../theme/app_styles.dart';
-import '../home/home_screen.dart';
+import '../../../main.dart';
 
 // Widgets
 import 'widgets/login_logo.dart';
@@ -83,19 +83,17 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('guest_mode', true);
+      // Forzar reconstrucción del AuthWrapper para que detecte el modo invitado
+      authWrapperKey.currentState?.refresh();
+    } catch (_) {
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error al continuar como invitado'),
+            backgroundColor: kErrorColor,
+          ),
         );
       }
-    } catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error al continuar como invitado'),
-          backgroundColor: kErrorColor,
-        ),
-      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
