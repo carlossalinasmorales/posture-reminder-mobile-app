@@ -9,8 +9,8 @@ import 'data/datasources/firebase_datasource.dart';
 import 'data/datasources/notification_service.dart';
 import 'data/repositories/reminder_repository_impl.dart';
 import 'presentation/bloc/reminder_bloc.dart';
-import 'presentation/screens/home_screen.dart';
-import 'presentation/screens/login_screen.dart';
+import 'presentation/screens/home/home_screen.dart';
+import 'presentation/screens/login/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'theme/app_styles.dart';
 
