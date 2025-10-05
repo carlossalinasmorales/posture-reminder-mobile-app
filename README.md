@@ -2,6 +2,13 @@
 
 Una aplicación móvil diseñada especialmente para adultos mayores para ayudarles a mantener una buena postura mediante recordatorios personalizables.
 
+## Tecnologías Utilizadas
+
+- Flutter
+- Firebase
+- BLoC Pattern
+- Clean Architecture
+
 ## Características Principales
 
 - Recordatorios personalizables de postura
@@ -70,16 +77,9 @@ lib/
     └── app_styles.dart                # Estilos globales
 ```
 
-## Tecnologías Utilizadas
-
-- Flutter
-- Firebase
-- BLoC Pattern
-- Clean Architecture
-
 ## Problemas Conocidos
 
-# Error Google API
+### Error Google API
 
 Existe un error conocido con Google API Manager que muestra el siguiente log:
 ```
@@ -88,12 +88,12 @@ E/GoogleApiManager: java.lang.SecurityException: Unknown calling package name 'c
 ```
 Este es un [issue conocido de Google](https://issuetracker.google.com/issues/369219148) que está pendiente de solución.
 
-# Problema con notificaciones
+### Problema con notificaciones
 
 No se logró actualizar las remind cards en segundo plano, por ahora la aplicación se abre forzadamente para que la ui se actualice con las acciones de la notificación.
 
 
-## Checklist Desafio
+# Checklist Desafio
 
 ## 1. Creación y Gestión de Recordatorios
 - [✔] Crear recordatorios
