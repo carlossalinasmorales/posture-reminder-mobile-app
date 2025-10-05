@@ -1,39 +1,134 @@
--install
+# Posture Reminder App
 
-flutter clean
+Una aplicación móvil diseñada especialmente para adultos mayores para ayudarles a mantener una buena postura mediante recordatorios personalizables.
 
+## Características Principales
+
+- 🔔 Recordatorios personalizables de postura
+- 👴 Interfaz simplificada para adultos mayores
+- 💾 Sincronización en la nube con Firebase
+- 🔄 Almacenamiento local
+- 📱 Notificaciones locales
+- 🎨 Diseño de alta legibilidad
+
+## Instalación
+
+1. Clonar el repositorio:
+```bash
+git clone https://github.com/tuusuario/posture_reminder_mobile_app.git
+```
+
+2. Instalar dependencias:
+```bash
 flutter pub get
+```
 
+3. Configurar los iconos y splash screen:
+```bash
 flutter pub run flutter_launcher_icons:main
-
 flutter pub run flutter_native_splash:create
+```
 
+4. Ejecutar la aplicación:
+```bash
 flutter run
+```
 
+## Estructura del Proyecto
 
+```
+lib/
+├── data/
+│   ├── datasources/
+│   │   ├── firebase_datasource.dart    # Gestión de datos en Firebase
+│   │   ├── local_datasource.dart       # Almacenamiento local
+│   │   └── notification_service.dart    # Servicio de notificaciones
+│   ├── models/
+│   │   └── reminder_model.dart         # Modelo de datos
+│   └── repositories/
+│       └── reminder_repository_impl.dart # Implementación del repositorio
+│
+├── domain/
+│   ├── entities/
+│   │   └── reminder.dart               # Entidad principal
+│   └── repositories/
+│       └── reminder_repository.dart     # Contrato del repositorio
+│
+├── presentation/
+│   ├── bloc/
+│   │   └── reminder_bloc.dart          # Gestión de estado
+│   └── screens/
+│       ├── create_reminder/            # Pantalla de creación
+│       ├── home/                       # Pantalla principal
+│       ├── login/                      # Autenticación
+│       └── my_reminders/              # Lista de recordatorios
+│
+└── theme/
+    └── app_styles.dart                # Estilos globales
+```
 
-- ajustes pensados para adultos mayores
-home screen con dos opcione claras
-actualziar recordatorio solo con cambiar dato (con boton integrado igual apra dar seguridad)
-reloj tipo rueda con intervalo de minutos de 5 minutos para mas simpleza
+## Tecnologías Utilizadas
 
+- Flutter
+- Firebase
+- BLoC Pattern
+- Clean Architecture
 
-Log Error (Issue de Google que no se ha solucionado https://issuetracker.google.com/issues/369219148?pli=1)
+## Problemas Conocidos
 
-E/GoogleApiManager(25974): Failed to get service from broker. 
-E/GoogleApiManager(25974): java.lang.SecurityException: Unknown calling package name 'com.google.android.gms'.
-E/GoogleApiManager(25974):      at android.os.Parcel.createExceptionOrNull(Parcel.java:3340)
-E/GoogleApiManager(25974):      at android.os.Parcel.createException(Parcel.java:3324)
-E/GoogleApiManager(25974):      at android.os.Parcel.readException(Parcel.java:3307)
-E/GoogleApiManager(25974):      at android.os.Parcel.readException(Parcel.java:3249)
-E/GoogleApiManager(25974):      at aywi.a(:com.google.android.gms@252635038@25.26.35 (260800-783060121):36)
-E/GoogleApiManager(25974):      at ayup.z(:com.google.android.gms@252635038@25.26.35 (260800-783060121):143)
-E/GoogleApiManager(25974):      at aybo.run(:com.google.android.gms@252635038@25.26.35 (260800-783060121):42)
-E/GoogleApiManager(25974):      at android.os.Handler.handleCallback(Handler.java:995)
-E/GoogleApiManager(25974):      at android.os.Handler.dispatchMessage(Handler.java:103)
-E/GoogleApiManager(25974):      at cirt.mw(:com.google.android.gms@252635038@25.26.35 (260800-783060121):1)
-E/GoogleApiManager(25974):      at cirt.dispatchMessage(:com.google.android.gms@252635038@25.26.35 (260800-783060121):5)
-E/GoogleApiManager(25974):      at android.os.Looper.loopOnce(Looper.java:248)
-E/GoogleApiManager(25974):      at android.os.Looper.loop(Looper.java:338)
-E/GoogleApiManager(25974):      at android.os.HandlerThread.run(HandlerThread.java:85)
+Existe un error conocido con Google API Manager que muestra el siguiente log:
+```
+E/GoogleApiManager: Failed to get service from broker.
+E/GoogleApiManager: java.lang.SecurityException: Unknown calling package name 'com.google.android.gms'
+```
+Este es un [issue conocido de Google](https://issuetracker.google.com/issues/369219148) que está pendiente de solución.
 
+## Checklist Desafio
+
+## 1. Creación y Gestión de Recordatorios
+- [✔] Crear recordatorios
+- [✔] Editar recordatorios
+- [✔] Eliminar recordatorios
+- Estructura del recordatorio:
+  - [✔] Título
+  - [✔] Descripción
+  - [✔] Fecha y hora
+  - [✔] Frecuencia (Único/Diario/Semanal/Personalizado)
+  - [✔] Estado (Pendiente/Completado/Omitido)
+- [✔] Almacenamiento local (SharedPreferences)
+- [✔] Sincronización con Firebase
+
+## 2. Notificaciones Push
+- [✔] Implementación de flutter_local_notifications
+- [✔] Mostrar título y descripción
+- [✔] Acciones rápidas en notificación
+  - [✔] Marcar como completado
+  - [✔] Otras acciones personalizadas (Aplazado)
+
+## 3. Pantalla Principal (Home -> My Reminders)
+En este punto me tomé la libertad de diseñar la pagina principal más simple con 2 opciones pensada para adultos mayores, debido a que la home con las cards de recordatorios inmediatamente podria verse un poco complicado como primera pantalla.
+- [✔] Lista de recordatorios
+  - [X] Ordenamiento por fecha
+  - [✔] Ordenamiento por estado
+- [✔] Filtros
+  - [✔] Pendientes
+  - [✔] Completados
+  - [✔] Omitidos
+- [✔] Diseño adaptado para adultos mayores
+
+## 4. Características Adicionales
+- Repeticiones avanzadas
+  - [✔] Intervalos personalizados
+  - [✔] Selección de días específicos
+- Autenticación
+  - [✔] Firebase Auth
+  - [✔] Modo invitado
+- Firebase Realtime
+  - [✔] Sincronización automática
+- [✔] Función "Aplazar"
+  - [✔] Botón en notificación
+  - [✔] Tiempo predeterminado (2 min)
+
+## Autor
+
+Carlos Salinas
